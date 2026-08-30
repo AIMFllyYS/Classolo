@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { crpHostKit } from '@/features/render-modules/kit'
 import { modulePresets, playbookNav } from '@/features/playbook/registry'
 
 export default function PlaybookModulesPage() {
@@ -15,7 +16,8 @@ export default function PlaybookModulesPage() {
       <p className="mt-3 text-sm text-muted-foreground">
         每个渲染模块的演示只放这里。实现仍在{' '}
         <code className="text-foreground">src/features/render-modules/</code>
-        ，本页只挂样例 props。
+        ，本页只挂样例 props。当前注册{' '}
+        {Object.keys(crpHostKit.renderModuleRegistry).length} 个模块。
       </p>
       <nav className="mt-6 flex flex-wrap gap-3 text-sm">
         {playbookNav.map((item) => (
