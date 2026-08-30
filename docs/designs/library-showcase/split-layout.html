@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classolo 选型 · 可拖拽分屏面板</title>
+  <style>
+    :root {
+      --paper: #F5F1EA;
+      --paper-2: #EFEAE1;
+      --ink: #2A2620;
+      --ink-2: #5C564E;
+      --line: #D9D2C7;
+      --line-2: #E7E1D6;
+      --card: #FBFAF6;
+      --clay: #D97757;
+      --radius: 5px;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti SC", "Noto Serif SC", "Noto Serif CJK SC", Georgia, serif;
+      --sans: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Noto Sans SC", "Noto Sans CJK SC", sans-serif;
+      --mono: "Cascadia Code", "SF Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 36px 22px 72px;
+    }
+    header.mast {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 28px;
+      margin-bottom: 28px;
+    }
+    .kicker {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      margin: 0 0 10px;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(28px, 4.4vw, 42px);
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin: 0 0 14px;
+    }
+    .dek {
+      font-size: 17px;
+      color: var(--ink);
+      max-width: 46em;
+      margin: 0;
+    }
+    .dek strong { font-weight: 650; }
+    h2 {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+    h3 {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 600;
+      margin: 22px 0 8px;
+    }
+    p { margin: 0 0 12px; }
+    a { color: var(--ink); text-underline-offset: 3px; }
+    .muted { color: var(--ink-2); }
+    .small { font-size: 13px; line-height: 1.55; }
+
+    /* 唯一签名：硬指标横向对比条 */
+    .strip {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px 8px;
+      margin: 0 0 32px;
+    }
+    .strip-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .strip-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      margin: 0;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: minmax(140px, 1.3fr) minmax(120px, 1.4fr) 88px 52px 118px;
+      gap: 10px 14px;
+      align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid var(--line-2);
+      font-size: 13px;
+    }
+    .row.head {
+      border-top: 0;
+      color: var(--ink-2);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding-top: 0;
+    }
+    .row.rec .name { color: var(--clay); font-weight: 650; }
+    .name { font-family: var(--mono); font-size: 12.5px; }
+    .bar-wrap { height: 8px; background: var(--paper-2); border-radius: 4px; overflow: hidden; }
+    .bar {
+      height: 100%;
+      background: var(--ink);
+      border-radius: 4px;
+    }
+    .row.rec .bar { background: var(--clay); }
+    .num { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+    .note { margin: 10px 0 6px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 22px 18px;
+      margin: 0 0 18px;
+    }
+    .card.rec {
+      border-color: var(--clay);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .badge {
+      flex: 0 0 auto;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid var(--clay);
+      color: var(--clay);
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+    .layer {
+      display: inline-block;
+      font-size: 12px;
+      color: var(--ink-2);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin: 0 0 10px;
+    }
+    .verdict {
+      border-top: 1px solid var(--line-2);
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+    .verdict .label {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      margin-bottom: 4px;
+    }
+
+    table.metrics {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    table.metrics th,
+    table.metrics td {
+      text-align: left;
+      vertical-align: top;
+      padding: 8px 10px 8px 0;
+      border-bottom: 1px solid var(--line-2);
+    }
+    table.metrics th {
+      width: 38%;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+    table.metrics td { font-weight: 450; }
+    pre {
+      margin: 0 0 8px;
+      padding: 14px 14px 12px;
+      background: var(--paper-2);
+      border: 1px solid var(--line-2);
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    code { font-family: var(--mono); font-size: 0.92em; }
+    ul { margin: 0 0 12px; padding-left: 1.15em; }
+    li { margin: 0 0 4px; }
+    .history, .sources {
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
+      margin-top: 28px;
+    }
+    .history-item {
+      display: grid;
+      grid-template-columns: 108px 1fr;
+      gap: 12px;
+      font-size: 14.5px;
+    }
+    .history-item time {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink-2);
+    }
+    .src-list { list-style: none; padding: 0; margin: 0; }
+    .src-list li {
+      display: grid;
+      grid-template-columns: 108px 1fr;
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line-2);
+      font-size: 13px;
+    }
+    .src-list span { color: var(--ink-2); font-family: var(--mono); font-size: 12px; }
+    .src-list a { word-break: break-all; }
+    @media (max-width: 760px) {
+      .row, .row.head {
+        grid-template-columns: 1fr 1fr;
+      }
+      .row .bar-wrap { grid-column: 1 / -1; }
+      .history-item, .src-list li {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="mast">
+      <p class="kicker">Classolo · library showcase · 2026-08-30</p>
+      <h1>可拖拽分屏面板</h1>
+      <p class="dek">分层结论：Classolo 是<strong>固定四区</strong>工作台（导航可收起 + 文稿/笔记均分 + 两栏各自上下分割），需要的是通用 resizable panel 层，不需要 IDE 级 dock 层（标签页、拖拽重排、浮动窗）。当前推荐 <strong>react-resizable-panels</strong>，经已定的 shadcn/ui <code>Resizable</code> 使用。</p>
+    </header>
+
+    <section class="strip" aria-labelledby="strip-title">
+      <div class="strip-head">
+        <h2 class="strip-title" id="strip-title">硬指标横向对比</h2>
+        <p class="small muted" style="margin:0">gzip 按 Bundlephobia 线性比例；最长条 = dockview-react 86,702 B</p>
+      </div>
+      <div class="row head">
+        <div>库</div>
+        <div>gzip 相对体积</div>
+        <div>gzip</div>
+        <div>直接依赖</div>
+        <div>npm 最近发布</div>
+      </div>
+      <div class="row rec">
+        <div class="name">react-resizable-panels</div>
+        <div class="bar-wrap" title="11,141 / 86,702"><div class="bar" style="width:12.85%"></div></div>
+        <div class="num">11,141 B</div>
+        <div class="num">0</div>
+        <div class="num">2026-08-16</div>
+      </div>
+      <div class="row">
+        <div class="name">allotment</div>
+        <div class="bar-wrap" title="9,592 / 86,702"><div class="bar" style="width:11.06%"></div></div>
+        <div class="num">9,592 B</div>
+        <div class="num">6</div>
+        <div class="num">2025-12-19</div>
+      </div>
+      <div class="row">
+        <div class="name">dockview-react</div>
+        <div class="bar-wrap" title="86,702 / 86,702"><div class="bar" style="width:100%"></div></div>
+        <div class="num">86,702 B</div>
+        <div class="num">1</div>
+        <div class="num">2026-08-19</div>
+      </div>
+      <div class="row">
+        <div class="name">flexlayout-react</div>
+        <div class="bar-wrap" title="51,328 / 86,702"><div class="bar" style="width:59.2%"></div></div>
+        <div class="num">51,328 B</div>
+        <div class="num">0</div>
+        <div class="num">2026-08-29</div>
+      </div>
+      <p class="small muted note">gzip / 依赖数量来自 Bundlephobia API（含其 <code>dependencyCount</code>）。allotment、dockview-react、flexlayout-react 另需官方 CSS，未计入上表 gzip。react-split 最近 npm 发布为 2022-01-07，未列入候选。</p>
+    </section>
+
+    <article class="card rec" id="rrp">
+      <div class="card-top">
+        <h2>react-resizable-panels</h2>
+        <span class="badge">当前推荐</span>
+      </div>
+      <p class="layer">通用 resizable panel 层</p>
+      <p>官网定位：用 <code>Group</code> / <code>Panel</code> / <code>Separator</code> 做可拖拽布局。shadcn/ui 文档原文：“The Resizable component is built on top of react-resizable-panels by bvaughn.” 仓库封装把 v4 的 <code>Group</code>/<code>Panel</code>/<code>Separator</code> 映射为 <code>ResizablePanelGroup</code>/<code>ResizablePanel</code>/<code>ResizableHandle</code>。</p>
+      <h3>核心能力（官网）</h3>
+      <ul>
+        <li>嵌套分组：<code>/examples/nested-groups</code>，可在交叉处同时拖多组。</li>
+        <li>收起：<code>collapsible</code> + <code>minSize</code> + <code>collapsedSize</code>；命令式 <code>collapse()</code> / <code>expand()</code>。</li>
+        <li>持久化：<code>useDefaultLayout({ id, storage })</code>，默认 <code>localStorage</code>，可换成自定义 <code>LayoutStorage</code>。</li>
+        <li>键盘：<code>Separator</code> 为可 Tab 聚焦的 splitter，带 WAI-ARIA <code>role="separator"</code>；<code>onLayoutChanged</code> 将键盘输入视为用户交互。</li>
+        <li>触摸：<code>resizeTargetMinimumSize</code> 按 coarse/fine 指针加大命中区。</li>
+        <li>SSR：有 server-rendering / server-components 示例；百分比默认尺寸可能有轻微移位。</li>
+      </ul>
+      <h3>硬指标</h3>
+      <table class="metrics">
+        <tr><th>当前版本 / 发布时间</th><td>4.12.3，npm time 2026-08-16T16:20:26.178Z</td></tr>
+        <tr><th>维护者 / bus factor</th><td>npm maintainer <code>brianvaughn</code>。GitHub 提交量 bvaughn 730，次位 Andarist 9。单人主维护。</td></tr>
+        <tr><th>gzip / 传递依赖</th><td>11,141 B gzip；Bundlephobia <code>dependencyCount: 0</code>。peer：react / react-dom <code>^18 || ^19</code>。</td></tr>
+        <tr><th>install 脚本</th><td>无 <code>preinstall</code> / <code>install</code> / <code>postinstall</code>（无 npm 标红类脚本）。</td></tr>
+        <tr><th>许可证</th><td>MIT</td></tr>
+        <tr><th>React 19 / SSR</th><td>官方平台要求 React ≥ 18。有 Next.js server components 示例。Classolo 为 SSG export，仍建议客户端工作台使用。</td></tr>
+        <tr><th>嵌套 / 收起 / 持久化 / 触摸 / 键盘</th><td>均有官方 API 或示例，见上。</td></tr>
+        <tr><th>文档 / TypeScript</th><td>独立文档站；发布包含 <code>dist/react-resizable-panels.d.ts</code>。</td></tr>
+        <tr><th>GitHub（本次 API）</th><td>5,353 stars；open_issues_count 7；pushed 2026-08-16。</td></tr>
+        <tr><th>npm 周下载</th><td>36,933,089（api.npmjs.org，2026-08-22–2026-08-28）</td></tr>
+      </table>
+      <h3>官方示例</h3>
+      <pre><code>&lt;Group orientation="horizontal"&gt;
+  &lt;Panel&gt;left&lt;/Panel&gt;
+  &lt;Panel&gt;
+    &lt;Group orientation="vertical"&gt;
+      &lt;Panel&gt;top&lt;/Panel&gt;
+      &lt;Panel&gt;
+        &lt;Group orientation="horizontal"&gt;
+          &lt;Panel&gt;left&lt;/Panel&gt;
+          &lt;Panel&gt;right&lt;/Panel&gt;
+        &lt;/Group&gt;
+      &lt;/Panel&gt;
+    &lt;/Group&gt;
+  &lt;/Panel&gt;
+  &lt;Panel&gt;right&lt;/Panel&gt;
+&lt;/Group&gt;</code></pre>
+      <p class="small muted">来源：react-resizable-panels.vercel.app/examples/nested-groups。持久化配套：</p>
+      <pre><code>const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+  id: "unique-layout-id",
+  storage: localStorage
+});</code></pre>
+      <div class="verdict">
+        <div class="label">适合 Classolo 吗</div>
+        <p>适合，作为默认。固定四区就是嵌套 Group；左侧导航对应 <code>collapsible</code>；比例可用 <code>useDefaultLayout</code> 或 <code>onLayoutChanged</code> 写入本地。与已定 shadcn 同栈，不必再引入第二套分割库。</p>
+      </div>
+    </article>
+
+    <article class="card" id="allotment">
+      <div class="card-top">
+        <h2>allotment</h2>
+      </div>
+      <p class="layer">通用 resizable panel 层</p>
+      <p>README 定位：React split-pane，外观与 VS Code split view 同源。需 <code>import "allotment/dist/style.css"</code>。Pane 可设 <code>minSize</code> / <code>maxSize</code> / <code>snap</code> / <code>visible</code>。</p>
+      <h3>核心能力（官方 README）</h3>
+      <ul>
+        <li>水平/垂直：<code>vertical</code> prop。</li>
+        <li>收起：<code>visible</code> + <code>snap</code>（吸到零）；<code>onVisibleChange</code>。</li>
+        <li>比例：<code>defaultSizes</code>；变化走 <code>onChange</code> / <code>onDragEnd</code>。无内置 storage hook。</li>
+        <li>命令式：ref 上的 <code>reset()</code> / <code>resize([...])</code>。</li>
+        <li>触摸：README 写明触控设备 sash 反馈区固定 20px；可用 <code>setSashSize</code> 加大鼠标区。</li>
+        <li>SSR：README FAQ「Allotment currently only works in a browser」，建议 Next.js <code>dynamic(..., { ssr: false })</code>。</li>
+        <li>嵌套：README 无嵌套示例。GitHub issue #799 以 nested allotments 为既定用法讨论（已关闭，称 1.20.2 修复）。</li>
+        <li>键盘无障碍：官方 README 未描述键盘调节 sash。此项标<strong>未核实</strong>。</li>
+      </ul>
+      <h3>硬指标</h3>
+      <table class="metrics">
+        <tr><th>当前版本 / 发布时间</th><td>1.20.5，npm time 2025-12-19T16:41:50.136Z。GitHub release 同日。距本次调研约 8 个月无新版本。仓库 pushed_at 2026-08-28（含机器人提交）。</td></tr>
+        <tr><th>维护者 / bus factor</th><td>npm maintainer <code>johnwalley</code>。GitHub 人类提交 johnwalley 202；renovate[bot] 575。单人主维护。open_issues_count 100。</td></tr>
+        <tr><th>gzip / 传递依赖</th><td>9,592 B gzip；Bundlephobia <code>dependencyCount: 6</code>。npm dependencies：classnames、eventemitter3、fast-deep-equal、lodash.clamp、lodash.debounce、usehooks-ts。另需官方 CSS。</td></tr>
+        <tr><th>install 脚本</th><td>无 <code>preinstall</code> / <code>install</code> / <code>postinstall</code>。有 <code>prepare: husky</code>（对 registry 依赖安装通常不执行，非标红 install）。</td></tr>
+        <tr><th>许可证</th><td>MIT（LICENSE 含 Microsoft / VS Code 衍生声明）</td></tr>
+        <tr><th>React 19 / SSR</th><td>peer <code>^17 || ^18 || ^19</code>。1.20.5 changelog：为 React 19 将 use-resize-observer 换成 usehooks-ts。SSR 官方要求禁服务端。</td></tr>
+        <tr><th>文档 / TypeScript</th><td>README + Storybook（allotment-storybook.netlify.app）。types：<code>./dist/types/src/index.d.ts</code>。</td></tr>
+        <tr><th>GitHub / 周下载</th><td>1,258 stars。周下载 249,047（2026-08-22–2026-08-28）。</td></tr>
+      </table>
+      <h3>官方示例</h3>
+      <pre><code>import { Allotment } from "allotment";
+import "allotment/dist/style.css";
+
+&lt;Allotment&gt;
+  &lt;Allotment.Pane minSize={200}&gt;
+    &lt;ComponentA /&gt;
+  &lt;/Allotment.Pane&gt;
+  &lt;Allotment.Pane snap&gt;
+    &lt;ComponentB /&gt;
+  &lt;/Allotment.Pane&gt;
+&lt;/Allotment&gt;</code></pre>
+      <div class="verdict">
+        <div class="label">适合 Classolo 吗</div>
+        <p>能力上能做四区嵌套，但与 shadcn Resizable 重复；要自带 CSS、禁 SSR、自己接持久化；主包已 8 个月未发版。不作默认。</p>
+      </div>
+    </article>
+
+    <article class="card" id="dockview">
+      <div class="card-top">
+        <h2>dockview-react</h2>
+      </div>
+      <p class="layer">IDE 级 dock 布局层</p>
+      <p>官网：零运行时依赖的布局管理器，做 IDE 式界面——标签与组、拖放重排、浮动组、弹出窗口、序列化。组件类型含 Dockview（完整停靠）、Gridview（无标签网格）、Splitview（单轴分割）、Paneview（可折叠侧栏）。React 包为 <code>dockview-react</code>（peer react 16.8–19）；底层 <code>dockview</code> → <code>dockview-core</code>。</p>
+      <h3>核心能力（dockview.dev / npm README）</h3>
+      <ul>
+        <li>持久化：<code>api.toJSON()</code> / <code>api.fromJSON()</code>。</li>
+        <li>触摸：README 关键词与特性列表含 Touch &amp; mobile support。</li>
+        <li>键盘：llms.txt 写明 ARIA roles 与 keyboard navigation。空间键盘停靠属 Enterprise。</li>
+        <li>收起：Paneview 文档描述为 VS Code 式可折叠窗格。完整 Dockview 还有 maximize / edge groups。</li>
+        <li>SSR / Next.js：本次未在官方文档抓到专门说明。<strong>未核实</strong>。</li>
+      </ul>
+      <h3>硬指标</h3>
+      <table class="metrics">
+        <tr><th>当前版本 / 发布时间</th><td>dockview-react 8.2.0，npm time 2026-08-19T21:25:04.673Z（dockview 同版本 21:24:50Z）。</td></tr>
+        <tr><th>维护者 / bus factor</th><td>npm maintainer <code>mathuo</code>。GitHub 提交 mathuo 3167，次位 claude 82。单人主维护。仓库 license 文件声明核心包 MIT，<code>dockview-enterprise</code> 专有。</td></tr>
+        <tr><th>gzip / 传递依赖</th><td>86,702 B gzip；Bundlephobia <code>dependencyCount: 1</code>（dockview，再依赖 dockview-core）。另需 <code>dockview-react/dist/styles/dockview.css</code>。</td></tr>
+        <tr><th>install 脚本</th><td>无 <code>preinstall</code> / <code>install</code> / <code>postinstall</code>。</td></tr>
+        <tr><th>许可证</th><td>npm 与 LICENCE.md 表：dockview / dockview-react / dockview-core 为 MIT。</td></tr>
+        <tr><th>React 19</th><td>peer <code>^16.8 || ^17 || ^18 || ^19</code>。</td></tr>
+        <tr><th>文档 / TypeScript</th><td>dockview.dev + typedoc；types <code>./dist/cjs/index.d.ts</code>。</td></tr>
+        <tr><th>GitHub / 周下载</th><td>dockview/dockview 3,390 stars；open_issues_count 124。dockview-react 周下载 136,059；dockview 246,916（2026-08-22–2026-08-28）。</td></tr>
+      </table>
+      <h3>官方示例</h3>
+      <pre><code>import { DockviewReact, themeDark } from "dockview-react";
+import "dockview-react/dist/styles/dockview.css";
+
+&lt;DockviewReact
+  theme={themeDark}
+  components={{ myComponent: () =&gt; &lt;div&gt;Hello World&lt;/div&gt; }}
+  onReady={(event) =&gt; {
+    event.api.addPanel({ id: "panel_1", component: "myComponent" });
+  }}
+/&gt;</code></pre>
+      <div class="verdict">
+        <div class="label">适合 Classolo 吗</div>
+        <p>不适合作为工作台默认。产品不允许用户把四区拖成任意 IDE 布局；即使用 Splitview/Gridview，仍带上约 87 KB gzip 的 dock 引擎，且与 shadcn Resizable 无关。P2 若做「可拆出的自由面板」再评估。</p>
+      </div>
+    </article>
+
+    <article class="card" id="flexlayout">
+      <div class="card-top">
+        <h2>flexlayout-react</h2>
+      </div>
+      <p class="layer">IDE 级 dock 布局层（调研中的另一强候选）</p>
+      <p>README：多标签 docking 管理器，标签可缩放、移动、组织。仅依赖 React（peer）。可用 <code>tabSetEnableTabStrip: false</code> 把布局降成无标签 multi-splitter，但模型仍是 tabset/row 树。</p>
+      <h3>核心能力（官方 README）</h3>
+      <ul>
+        <li>嵌套：row 内再嵌 row/tabset。</li>
+        <li>持久化：<code>Model.fromJson</code> / <code>model.toJson()</code>。</li>
+        <li>触摸：Features 写 Mobile support (iPad, Android)。</li>
+        <li>键盘：独立 Accessibility 章；splitter 方向键 resize；ARIA <code>separator</code> + valuemin/valuenow。</li>
+        <li>收起：border tabset autohide、tabset maximize、group pill collapse——不是侧栏 <code>collapsible</code> 那种 API。</li>
+        <li>SSR / Next.js：本次未在 README 抓到说明。<strong>未核实</strong>。要求容器 <code>position: absolute | relative</code>。</li>
+      </ul>
+      <h3>硬指标</h3>
+      <table class="metrics">
+        <tr><th>当前版本 / 发布时间</th><td>0.10.7，npm time 2026-08-29T11:43:26.323Z；GitHub release 同日 11:44:45Z。</td></tr>
+        <tr><th>维护者 / bus factor</th><td>npm maintainer <code>nealus</code>。GitHub 提交 nealus 501、nealatcaplin 106。实质单人主维护。open_issues_count 185。</td></tr>
+        <tr><th>gzip / 传递依赖</th><td>51,328 B gzip；Bundlephobia <code>dependencyCount: 0</code>。另需主题 CSS，如 <code>flexlayout-react/style/alpha_light.css</code>。</td></tr>
+        <tr><th>install 脚本</th><td>无 <code>preinstall</code> / <code>install</code> / <code>postinstall</code>。</td></tr>
+        <tr><th>许可证</th><td>MIT</td></tr>
+        <tr><th>React 19</th><td>peer <code>^18 || ^19</code>。ESM-only，不能 <code>require()</code>。</td></tr>
+        <tr><th>文档 / TypeScript</th><td>README + Typedoc + demo。types：<code>./types/index.d.ts</code>。</td></tr>
+        <tr><th>GitHub / 周下载</th><td>1,345 stars。周下载 98,770（2026-08-22–2026-08-28）。</td></tr>
+      </table>
+      <h3>官方示例</h3>
+      <pre><code>const model = Model.fromJson(json);
+function App() {
+  const factory = (node) =&gt; {
+    if (node.getComponent() === "placeholder") {
+      return &lt;div&gt;{node.getName()}&lt;/div&gt;;
+    }
+  };
+  return &lt;Layout model={model} factory={factory} /&gt;;
+}</code></pre>
+      <div class="verdict">
+        <div class="label">适合 Classolo 吗</div>
+        <p>不适合作为默认。维护活跃、无障碍写得很完整，但解决的是可重排 IDE，不是固定四区。关掉 tab strip 仍要吃约 51 KB gzip 与 JSON 模型，且无法复用 shadcn Resizable。</p>
+      </div>
+    </article>
+
+    <section class="history">
+      <h2>决策历史</h2>
+      <div class="history-item">
+        <time datetime="2026-08-30">2026-08-30</time>
+        <p>AI 初步推荐 <strong>react-resizable-panels</strong>（经 shadcn/ui Resizable）。理由：与已定组件库同栈，嵌套分割 / 收起 / 持久化 / 键盘与触摸均有官方 API，gzip 11,141 B 且无运行时依赖；dock 层（dockview、flexlayout）超出固定四区需求。</p>
+      </div>
+    </section>
+
+    <footer class="sources">
+      <h2>来源与抓取日期</h2>
+      <p class="small muted">抓取日均为 2026-08-30。未在下列来源出现的数字与结论未写入正文。</p>
+      <ul class="src-list">
+        <li><span>2026-08-30</span><a href="https://registry.npmjs.org/react-resizable-panels/4.12.3">registry.npmjs.org/react-resizable-panels/4.12.3</a></li>
+        <li><span>2026-08-30</span><a href="https://registry.npmjs.org/allotment/1.20.5">registry.npmjs.org/allotment/1.20.5</a></li>
+        <li><span>2026-08-30</span><a href="https://registry.npmjs.org/dockview-react/8.2.0">registry.npmjs.org/dockview-react/8.2.0</a></li>
+        <li><span>2026-08-30</span><a href="https://registry.npmjs.org/dockview/8.2.0">registry.npmjs.org/dockview/8.2.0</a></li>
+        <li><span>2026-08-30</span><a href="https://registry.npmjs.org/dockview-core/8.2.0">registry.npmjs.org/dockview-core/8.2.0</a></li>
+        <li><span>2026-08-30</span><a href="https://registry.npmjs.org/flexlayout-react/latest">registry.npmjs.org/flexlayout-react/latest</a></li>
+        <li><span>2026-08-30</span><a href="https://registry.npmjs.org/react-split/latest">registry.npmjs.org/react-split/latest</a>（排除项：2.0.14 @ 2022-01-07）</li>
+        <li><span>2026-08-30</span>Bundlephobia API <code>/api/size?package=…</code>：react-resizable-panels@4.12.3、allotment@1.20.5、dockview-react@8.2.0、flexlayout-react@0.10.7</li>
+        <li><span>2026-08-30</span>api.npmjs.org/downloads/point/last-week（区间 2026-08-22–2026-08-28）</li>
+        <li><span>2026-08-30</span>GitHub API：bvaughn/react-resizable-panels、johnwalley/allotment、dockview/dockview、caplin/FlexLayout（repo + contributors + releases）</li>
+        <li><span>2026-08-30</span><a href="https://react-resizable-panels.vercel.app/">react-resizable-panels.vercel.app</a>（basics / nested-groups / collapsible-panels / persistent-layout / use-default-layout / separator / platform-requirements / server-rendering）</li>
+        <li><span>2026-08-30</span><a href="https://github.com/bvaughn/react-resizable-panels/releases/tag/4.12.3">GitHub release 4.12.3</a>；v4.0.0 tag 发布于 2025-12-16</li>
+        <li><span>2026-08-30</span><a href="https://ui.shadcn.com/docs/components/resizable">ui.shadcn.com/docs/components/resizable</a>；源码 <a href="https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/resizable.tsx">apps/v4/registry/new-york-v4/ui/resizable.tsx</a>；PR <a href="https://github.com/shadcn-ui/ui/pull/9461">#9461</a> 合并于 2026-02-03</li>
+        <li><span>2026-08-30</span><a href="https://github.com/johnwalley/allotment">github.com/johnwalley/allotment</a> README / LICENSE / releases；issue <a href="https://github.com/johnwalley/allotment/issues/799">#799</a></li>
+        <li><span>2026-08-30</span><a href="https://dockview.dev/docs/overview/introduction">dockview.dev/docs/overview/introduction</a>；<a href="https://dockview.dev/llms.txt">llms.txt</a>；<a href="https://github.com/dockview/dockview/blob/master/LICENCE.md">LICENCE.md</a></li>
+        <li><span>2026-08-30</span><a href="https://github.com/caplin/FlexLayout/blob/master/README.md">caplin/FlexLayout README</a>（含 Accessibility 与 toJson）</li>
+      </ul>
+    </footer>
+  </div>
+</body>
+</html>

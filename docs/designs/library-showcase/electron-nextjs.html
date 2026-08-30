@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Classolo · Electron × Next.js 集成与打包选型</title>
+  <style>
+    :root {
+      --paper: #F5F1EA;
+      --paper-2: #FBF8F3;
+      --ink: #2A2620;
+      --muted: #5C564C;
+      --faint: #8A8276;
+      --line: #DDD6C8;
+      --line-2: #EDE7DC;
+      --accent: #D97757;
+      --radius: 5px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    h1, h2, h3, .serif {
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Songti SC", "Noto Serif SC", serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+    a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: var(--muted); }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 48px 24px 80px; }
+    header.hero { margin-bottom: 40px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+    .kicker {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin: 0 0 12px;
+    }
+    h1 { font-size: 2.15rem; margin: 0 0 16px; }
+    .verdict {
+      font-size: 1.08rem;
+      color: var(--ink);
+      margin: 0;
+      max-width: 46em;
+    }
+    .meta {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--faint);
+    }
+    .rec-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: var(--radius);
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      font-weight: 600;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    section { margin: 40px 0; }
+    h2 { font-size: 1.45rem; margin: 0 0 14px; }
+    h3 { font-size: 1.18rem; margin: 0 0 10px; }
+    p { margin: 0 0 12px; }
+    .lede { color: var(--muted); }
+
+    /* Signature: hard-metric comparison bars */
+    .bars {
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 22px 10px;
+      margin: 20px 0 8px;
+    }
+    .bars-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .bars-head h2 { margin: 0; }
+    .bars-note { font-size: 12px; color: var(--faint); max-width: 28em; text-align: right; }
+    .bar-block { margin-bottom: 20px; }
+    .bar-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 148px 1fr 44px;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .bar-name { font-size: 13px; color: var(--ink); }
+    .bar-track {
+      height: 8px;
+      background: var(--line-2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--ink);
+      border-radius: 4px;
+    }
+    .bar-fill.rec { background: var(--accent); }
+    .bar-val { font-size: 12px; color: var(--faint); text-align: right; font-variant-numeric: tabular-nums; }
+
+    .card {
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px 24px 20px;
+      margin: 18px 0;
+    }
+    .card.recommended { border-color: var(--accent); }
+    .card .pos { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+    .card ul { margin: 0 0 14px; padding-left: 1.15em; }
+    .card li { margin-bottom: 4px; }
+
+    table.metrics {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 12px 0 16px;
+    }
+    table.metrics th, table.metrics td {
+      text-align: left;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    table.metrics th {
+      width: 38%;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    table.metrics tr:last-child th,
+    table.metrics tr:last-child td { border-bottom: 0; }
+    .fit {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      margin-top: 4px;
+    }
+    .fit strong { font-weight: 650; }
+
+    pre {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.5;
+      margin: 10px 0 0;
+    }
+    code {
+      font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+      font-size: 0.92em;
+    }
+    p code, td code, li code {
+      background: var(--line-2);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .cross table.metrics th { width: 28%; }
+    .history {
+      border-top: 1px solid var(--line);
+      padding-top: 28px;
+    }
+    .history ol { margin: 0; padding-left: 1.2em; }
+    footer.sources {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    footer.sources h2 { font-size: 1.15rem; }
+    footer.sources ol { padding-left: 1.2em; }
+    footer.sources li { margin-bottom: 6px; }
+    .warn { color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 720px) {
+      .wrap { padding: 32px 16px 64px; }
+      h1 { font-size: 1.7rem; }
+      .bar-row { grid-template-columns: 1fr; gap: 4px; }
+      .bar-val { text-align: left; }
+      .bars-head { flex-direction: column; }
+      .bars-note { text-align: left; }
+      table.metrics th { width: 42%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <p class="kicker">Classolo · 组件库选型 · 2026-08-30</p>
+      <h1>Electron × Next.js 集成与打包</h1>
+      <p class="verdict">
+        结构层结论：运行模式选 <strong>Next.js <code>output: 'export'</code> 静态导出 + 特权自定义协议加载</strong>（不要用 <code>file://</code>），打包器选 <strong>electron-builder（Windows NSIS）+ electron-updater</strong>。
+        该组合与 Classolo 现有 Next 配置、EdgeOne 静态导出、本地优先桌面 exe 一致；Route Handlers / Server Actions 不能进桌面包，改走 Electron main + IPC。
+      </p>
+      <p class="meta">抓取日 2026-08-30。版本与维护状态均来自本次 npm registry / 官方文档；查不到标「未核实」。陶土色仅标记当前推荐方案。</p>
+    </header>
+
+    <section>
+      <h2>运行时基线（必读）</h2>
+      <p class="lede">桌面壳本身的体积与 Chromium 能力，先于任何脚手架。</p>
+      <table class="metrics">
+        <tr><th>Electron 稳定版</th><td><code>44.0.0</code>（npm latest，发布 2026-08-25）</td></tr>
+        <tr><th>Chromium / Node / V8</th><td>Chromium <code>152.0.7977.54</code> · Node <code>v24.18.1</code> · V8 <code>15.2</code></td></tr>
+        <tr><th>许可证 / 维护方</th><td>MIT · Electron Community（npm maintainers: electronhq, electron-nightly）</td></tr>
+        <tr><th>Windows 基线体积</th><td>官方资源 <code>electron-v44.0.0-win32-x64.zip</code> = <strong>157,455,369 bytes</strong>（约 150.2 MB zip）。最终 NSIS 安装包还要叠加应用资源，具体 exe 体积未实测、不编造。</td></tr>
+        <tr><th>架构</th><td>Electron 44 已移除 Windows ia32 / Linux armv7l，仅 64 位。Classolo Windows exe 应打 x64。</td></tr>
+        <tr><th>install 脚本</th><td>npm 包 <code>electron@44.0.0</code> 的 package.json <strong>没有</strong> <code>scripts.postinstall</code>；提供 bin <code>electron</code> 与 <code>install-electron</code>（<code>install.js</code>），运行时再拉二进制。</td></tr>
+        <tr><th>Node 引擎</th><td><code>engines.node: &gt;= 22.12.0</code>（与 Classolo 锁定 Node 22.11.0 差一个小版本——接入 Electron 时需核对本机 Node，标为已知坑）。</td></tr>
+      </table>
+    </section>
+
+    <div class="bars">
+      <div class="bars-head">
+        <h2>硬指标横向对比条</h2>
+        <p class="bars-note">签名元素。分值是本次对照官方能力后的相对判断（0–10），不是厂商评分。陶土条 = 当前推荐。</p>
+      </div>
+
+      <div class="bar-block">
+        <div class="bar-label">与 Next.js 16 App Router 的证据强度（官方文档 / 官方 README）</div>
+        <div class="bar-row"><span class="bar-name">静态导出 + 自定义协议</span><div class="bar-track"><div class="bar-fill rec" style="width:90%"></div></div><span class="bar-val">9</span></div>
+        <div class="bar-row"><span class="bar-name">内嵌 next start / standalone</span><div class="bar-track"><div class="bar-fill" style="width:80%"></div></div><span class="bar-val">8</span></div>
+        <div class="bar-row"><span class="bar-name">Nextron v10</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><span class="bar-val">7</span></div>
+        <div class="bar-row"><span class="bar-name">electron-vite</span><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><span class="bar-val">1.5</span></div>
+      </div>
+
+      <div class="bar-block">
+        <div class="bar-label">Windows exe / 自动更新成熟度（官方一等能力）</div>
+        <div class="bar-row"><span class="bar-name">electron-builder + updater</span><div class="bar-track"><div class="bar-fill rec" style="width:95%"></div></div><span class="bar-val">9.5</span></div>
+        <div class="bar-row"><span class="bar-name">Electron Forge（Squirrel）</span><div class="bar-track"><div class="bar-fill" style="width:70%"></div></div><span class="bar-val">7</span></div>
+        <div class="bar-row"><span class="bar-name">Forge + 第三方 NSIS maker</span><div class="bar-track"><div class="bar-fill" style="width:45%"></div></div><span class="bar-val">4.5</span></div>
+      </div>
+
+      <div class="bar-block">
+        <div class="bar-label">与 Classolo 现有 <code>output:'export'</code> / EdgeOne / pnpm 的契合</div>
+        <div class="bar-row"><span class="bar-name">静态导出 + electron-builder</span><div class="bar-track"><div class="bar-fill rec" style="width:95%"></div></div><span class="bar-val">9.5</span></div>
+        <div class="bar-row"><span class="bar-name">Nextron（改 distDir/目录）</span><div class="bar-track"><div class="bar-fill" style="width:40%"></div></div><span class="bar-val">4</span></div>
+        <div class="bar-row"><span class="bar-name">内嵌 Next 服务</span><div class="bar-track"><div class="bar-fill" style="width:25%"></div></div><span class="bar-val">2.5</span></div>
+        <div class="bar-row"><span class="bar-name">Forge + pnpm 默认</span><div class="bar-track"><div class="bar-fill" style="width:35%"></div></div><span class="bar-val">3.5</span></div>
+      </div>
+
+      <div class="bar-block">
+        <div class="bar-label">npm latest 新鲜度（距 2026-08-30 的天数，越短越好；条越长越新）</div>
+        <div class="bar-row"><span class="bar-name">electron 44.0.0 · 5 天</span><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="bar-val">5d</span></div>
+        <div class="bar-row"><span class="bar-name">nextron 10.3.0 · 9 天</span><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="bar-val">9d</span></div>
+        <div class="bar-row"><span class="bar-name">electron-builder latest 26.15.3 · 82 天</span><div class="bar-track"><div class="bar-fill rec" style="width:40%"></div></div><span class="bar-val">82d</span></div>
+        <div class="bar-row"><span class="bar-name">electron-builder@v26 26.15.7 · 43 天</span><div class="bar-track"><div class="bar-fill rec" style="width:62%"></div></div><span class="bar-val">43d</span></div>
+        <div class="bar-row"><span class="bar-name">@electron-forge/cli 7.11.2 · 102 天</span><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><span class="bar-val">102d</span></div>
+        <div class="bar-row"><span class="bar-name">electron-vite 5.0.0 · 266 天</span><div class="bar-track"><div class="bar-fill" style="width:12%"></div></div><span class="bar-val">266d</span></div>
+      </div>
+    </div>
+
+    <!-- ========== MODE A ========== -->
+    <article class="card recommended">
+      <h3>模式 A · 静态导出 + 特权自定义协议 <span class="rec-badge">当前推荐方案</span></h3>
+      <p class="pos">定位：把 Next.js 当成静态站点生成器，Electron 只负责窗口、权限、通知、本地文件与自动更新。开发期仍 <code>next dev</code>（4070）；打 exe 时吃 <code>out/</code>。</p>
+      <p><strong>核心能力（来自 Next.js / Electron 官网）</strong></p>
+      <ul>
+        <li>Next.js：<code>output: 'export'</code> 在 <code>next build</code> 后生成 <code>out/</code> HTML/CSS/JS，可部署到「任何能托管静态资源的环境」。</li>
+        <li>Server Components 在构建期运行；Client Components 构建期预渲染后按 SPA 在客户端导航。</li>
+        <li>Electron 安全清单第 18 条：避免 <code>file://</code>，改用自定义协议。协议文档要求 <code>registerSchemesAsPrivileged</code> 把 scheme 注册为 <code>standard</code> + <code>secure</code>，否则相对 URL / IndexedDB 等会按非标准 scheme 失败。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>1. 最近发布 / 版本</th><td>模式本身无独立 npm 包。依赖 Electron 44.0.0（2026-08-25）与项目已用的 Next 16 静态导出。</td></tr>
+        <tr><th>2. 维护方 / bus factor</th><td>Next.js（Vercel）+ Electron 官方 API。无第三方脚手架单点。</td></tr>
+        <tr><th>3. 构建复杂度</th><td>低–中：新增 <code>electron/</code> main+preload、一条协议 handler、builder 配置。不改 App Router 目录。</td></tr>
+        <tr><th>4. install 脚本</th><td>无额外脚手架。Electron 无 postinstall；构建时 electron-builder 再拉 NSIS 工具（构建期下载，非 install 脚本）。</td></tr>
+        <tr><th>5. 许可证</th><td>Electron MIT；Next.js 以项目依赖为准（本次未单独展开 Next 许可证页）。</td></tr>
+        <tr><th>6. Next 16 App Router 证据</th><td>Next 官方 Static Exports：<strong>不支持</strong> Server Actions、依赖 Request 的 Route Handlers、Cookies、Rewrites/Redirects/Headers/Proxy、ISR、默认 <code>next/image</code> loader、Intercepting Routes、无 <code>generateStaticParams</code> 的动态路由。Route Handler 仅支持静态 <code>GET</code>，且须 <code>export const dynamic = 'force-static'</code>。</td></tr>
+        <tr><th>7. 文档质量</th><td>Next 静态导出页 + Electron protocol / security 均为官方一等文档。</td></tr>
+        <tr><th>8. 体积 / 更新</th><td>不内嵌 Next 服务器，体积接近 Electron 基线 zip（150.2 MB）+ 静态资源。更新交给打包器，本模式不自带更新。</td></tr>
+      </table>
+      <p>关键配置示例（协议片段取自 Electron <code>protocol</code> 文档；Next 配置与 Classolo 仓库现状一致）：</p>
+<pre><code>// next.config.ts（仓库已有）
+const nextConfig = {
+  output: 'export',
+  images: { unoptimized: true },
+  trailingSlash: true,
+}
+
+// electron/main.ts — 自定义协议（官方示例结构）
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'app',
+  privileges: { standard: true, secure: true, supportFetchAPI: true },
+}])
+app.whenReady().then(() =&gt; {
+  protocol.handle('app', (req) =&gt; {
+    const { pathname } = new URL(req.url)
+    const pathToServe = path.resolve(outDir, pathname === '/' ? 'index.html' : pathname)
+    // 必须做路径逃逸检查，见 Electron protocol.handle 文档
+    return net.fetch(pathToFileURL(pathToServe).toString())
+  })
+  win.loadURL('app://bundle/')
+})</code></pre>
+      <div class="fit">
+        <p><strong>适合 Classolo 吗？适合，作为桌面集成的默认路径。</strong> 麦克风、通知、PGlite 文件、后台任务都应放在 main；renderer 只跑导出后的 UI。现有 <code>src/app/api/ping/route.ts</code> 返回动态 <code>Date.now()</code>，与静态导出规则冲突，桌面端应改为 IPC，而不是指望 Route Handler。</p>
+      </div>
+    </article>
+
+    <!-- ========== MODE B ========== -->
+    <article class="card">
+      <h3>模式 B · 打包内嵌 Node 服务跑 next start / standalone</h3>
+      <p class="pos">定位：Electron 启动一个 Next 生产服务器（官方 <code>output: 'standalone'</code> 产出的 <code>server.js</code>），窗口再 <code>loadURL('http://127.0.0.1:…')</code>。</p>
+      <p><strong>核心能力（Next.js output 文档）</strong></p>
+      <ul>
+        <li><code>output: 'standalone'</code> 把追踪到的生产文件（含部分 <code>node_modules</code>）拷到 <code>.next/standalone</code>，可用 <code>node server.js</code> 代替 <code>next start</code>。</li>
+        <li><code>public</code> 与 <code>.next/static</code> 默认不在 standalone 内，需手动拷贝后由 <code>server.js</code> 提供。</li>
+        <li>可用 <code>PORT</code> / <code>HOSTNAME</code> 环境变量指定监听地址。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>1. 最近发布 / 版本</th><td>同样依附 Electron 44 + Next 16。standalone 是 Next 配置能力，不是独立包。</td></tr>
+        <tr><th>2. 维护方</th><td>Next 官方。Electron 侧要自写 spawn/生命周期，无单一维护脚手架。</td></tr>
+        <tr><th>3. 构建复杂度</th><td>高：两套 output 互斥（Classolo 已是 <code>export</code>，EdgeOne 也吃静态）；要管端口、退出杀进程、asar 解包、把 WASM/原生模块打进 standalone trace。</td></tr>
+        <tr><th>4. install 脚本</th><td>无额外。若拷入原生模块，仍要走 <code>@electron/rebuild</code>。</td></tr>
+        <tr><th>5. 许可证</th><td>同 Next / Electron（MIT for Electron）。</td></tr>
+        <tr><th>6. Next 16 兼容证据</th><td>此模式保留完整 App Router 运行时：Route Handlers、Server Actions、Cookies 等在「有 Node 服务器」时可用。官方静态导出页明确这些能力需要 Node 服务器。本次<strong>未找到</strong> Next 官方「请在 Electron 内跑 standalone」指南，社区实践有、官方集成文档未核实。</td></tr>
+        <tr><th>7. 文档质量</th><td>standalone 文档针对 Docker/CDN 部署，不是桌面壳。</td></tr>
+        <tr><th>8. 体积 / 更新</th><td>在 Electron ~150 MB 之上再打入 Next server + traced node_modules。增量体积未实测，不编造数字。自动更新仍取决于打包器。</td></tr>
+      </table>
+      <p>关键配置示例（官方 standalone）：</p>
+<pre><code>// next.config.ts — 与现有 output:'export' 互斥
+export default { output: 'standalone' }
+
+// 构建后（官方文档命令，Linux/mac；Windows 用 Copy-Item）
+// cp -r public .next/standalone/ &amp;&amp; cp -r .next/static .next/standalone/.next/
+// node .next/standalone/server.js   // PORT=4070 HOSTNAME=127.0.0.1</code></pre>
+      <div class="fit">
+        <p><strong>适合 Classolo 吗？不适合作为 P0 默认。</strong> 会拆掉已锁定的静态导出 / EdgeOne 路径，换来 Classolo 桌面并不需要的 Server Actions。本地库、麦克风都不依赖 Next 服务器。</p>
+      </div>
+    </article>
+
+    <!-- ========== MODE C ========== -->
+    <article class="card">
+      <h3>模式 C · Nextron 脚手架</h3>
+      <p class="pos">定位：<code>nextron</code> / <code>create-nextron-app</code> 把 Next renderer + Electron main + webpack 主进程 + electron-builder 绑成一套 CLI。</p>
+      <p><strong>核心能力（Nextron README，npm 10.3.0）</strong></p>
+      <ul>
+        <li>官方版本表：Next <code>v16.x</code> ↔ Nextron <code>v10.x</code>。</li>
+        <li>生产构建强制 <code>output: 'export'</code>，<code>trailingSlash: true</code>，<code>images.unoptimized</code>；生产 <code>distDir</code> 改到 <code>../app</code> 给 electron-builder 吃。</li>
+        <li>维护者原文（Discussion #254，2022，至抓取日 README 未改口）：生产只能处理静态文件，API routes 不可用。</li>
+        <li>官方示例目录仍是 <code>renderer/pages/</code>（Pages Router）。README 未展示 App Router 模板。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>1. 最近发布 / 版本</th><td>nextron <code>10.3.0</code>，npm time 2026-08-21。create-nextron-app <code>5.4.0</code>，同日 2026-08-21。</td></tr>
+        <tr><th>2. 维护方 / bus factor</th><td>仓库属主为个人账号 <code>saltyshiomix</code>（Yoshihide Shiono）。README 列出 8 名 maintainers，并链到 Discussion #244「Looking for maintainers」。GitHub：4,429 star、113 open issues、pushed 2026-08-21。应视为<strong>个人项目 + 志愿者</strong>，不是 Electron 官方。</td></tr>
+        <tr><th>3. 构建复杂度</th><td>对绿场低；对 Classolo 高：强制 <code>main/</code>+<code>renderer/</code> 分裂、<code>distDir: '../app'</code>、主进程 webpack（<code>nextron.config.ts</code>）、与现有 <code>src/app</code> 和 EdgeOne <code>out/</code> 冲突。</td></tr>
+        <tr><th>4. install 脚本</th><td>nextron 自身是 CLI（chalk/commander/webpack…）。Electron 二进制仍走 electron 包。未在 nextron latest README 中看到原生模块 postinstall。</td></tr>
+        <tr><th>5. 许可证</th><td>MIT（npm 与 GitHub license 一致）。</td></tr>
+        <tr><th>6. Next 16 兼容证据</th><td>官方 README 表格写明 v10.x 对应 Next v16.x，且 next.config <strong>必须 export</strong>。因此 App Router 能用的子集 = Next 静态导出子集；Server Actions / 动态 Route Handlers 仍不行。Issue #311 为 Next 13 app dir 历史讨论，不能当作 2026 官方 App Router 模板。</td></tr>
+        <tr><th>7. 文档质量</th><td>单页 README + examples；深度不如 Electron / Next 官网。</td></tr>
+        <tr><th>8. 自动更新 / 体积</th><td>底层就是 electron-builder（<code>electron-builder.yml</code>）。更新能力等于 builder，不额外减小 Electron 基线体积。npm 周下载本次页面展示约 3.5k 量级（registry 摘要）。</td></tr>
+      </table>
+      <p>关键配置示例（官方 README <code>renderer/next.config.ts</code>）：</p>
+<pre><code>const config: NextConfig = {
+  output: 'export',
+  distDir: process.env.NODE_ENV === 'production' ? '../app' : '.next',
+  trailingSlash: true,
+  images: { unoptimized: true },
+}
+export default config</code></pre>
+      <div class="fit">
+        <p><strong>适合 Classolo 吗？不建议引入。</strong> 它把 Classolo 已经自己做的事（export + trailingSlash + unoptimized）再包一层 webpack/目录约定，bus factor 偏个人，还与 EdgeOne 的 <code>out/</code> 打架。可当参考实现，不要当运行时依赖。</p>
+      </div>
+    </article>
+
+    <!-- ========== BUILDER ========== -->
+    <article class="card recommended">
+      <h3>打包器 · electron-builder + electron-updater <span class="rec-badge">当前推荐方案</span></h3>
+      <p class="pos">定位：官方自述「完整的 macOS/Windows/Linux 打包方案，开箱即用自动更新」。Windows 默认目标 NSIS。</p>
+      <p><strong>核心能力（electron.build）</strong></p>
+      <ul>
+        <li>Windows：<code>nsis</code>（安装器）、<code>nsis-web</code>、<code>portable</code>、AppX、MSI、Squirrel.Windows。NSIS 是默认 Windows 目标。</li>
+        <li>自动更新：<code>electron-updater</code>；Windows 可更新目标是 <strong>NSIS</strong>（文档写明 Squirrel.Windows 不被 electron-updater 支持）。</li>
+        <li>发布渠道：GitHub Releases、S3、Spaces、Cloudflare R2、Keygen、generic HTTP。</li>
+        <li>NSIS 文档要求 <code>app.setAppUserModelId(appId)</code>，否则 Windows 通知图标/AUMID 异常。</li>
+        <li>Electron 44 起 ia32 安装器需要 <code>electronVersion &lt;= 43</code>——Classolo 用 44 则只打 x64。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>1. 最近发布 / 版本</th><td>
+          npm <code>latest</code> = <code>26.15.3</code>（2026-06-09）。<br />
+          npm dist-tag <code>v26</code> = <code>26.15.7</code>（2026-07-18）——<strong>比 latest 新</strong>。<br />
+          npm <code>next</code> = <code>27.0.0-alpha.7</code>（2026-08-17）。<br />
+          electron-updater <code>latest</code> = <code>6.8.9</code>（2026-06-05）；<code>next</code> = <code>7.0.0-alpha.6</code>（2026-08-17）。
+        </td></tr>
+        <tr><th>2. 维护方 / bus factor</th><td>GitHub org <code>electron-userland/electron-builder</code>（14,655 star，2026-08-30 仍有 push）。npm maintainers：stefanjudis、develar、onegoldfishh；contributors 写明 Stefan Judis、Mike Maietta。社区项目但活跃，非 Electron 核心仓。</td></tr>
+        <tr><th>3. 构建复杂度</th><td>中：一份 <code>electron-builder.yml</code>（或 package.json <code>build</code>）。NSIS 选项多，默认 one-click 即可起步。</td></tr>
+        <tr><th>4. install 脚本</th><td>latest 包 JSON <strong>无</strong> <code>scripts.postinstall</code>。提供 bin <code>electron-builder</code> 与 <code>install-app-deps</code>（原生依赖按 Electron ABI 重编）。NSIS 工具在<strong>打包时</strong>下载，不是 npm install 时编译 C++。</td></tr>
+        <tr><th>5. 许可证</th><td>MIT。</td></tr>
+        <tr><th>6. Next 16 兼容</th><td>打包器不解析 App Router。只要把 <code>out/</code>（或 Nextron 的 <code>app/</code>）列入 <code>files</code> 即可。Nextron 官方生产路径就是 builder，可作旁证。</td></tr>
+        <tr><th>7. 文档质量</th><td>electron.build 文档完整（NSIS、auto-update、publish）。v27 有独立 breaking changes 页。</td></tr>
+        <tr><th>8. 自动更新成熟度</th><td>高：两行 <code>autoUpdater.checkForUpdatesAndNotify()</code>；产出 <code>latest.yml</code>。已知坑：Windows 关机过程中 on-quit 安装可能把应用装坏（issue #7807）；缓解在 updater ≥7 / builder v27 的 <code>autoInstallEvent = "onNextLaunch"</code>，但 <strong>6.8.9 latest 仍是 v6 线</strong>。v27 起 <code>disableWebInstaller</code> 默认 true。</td></tr>
+      </table>
+      <p>关键配置示例：</p>
+<pre><code># electron-builder.yml
+appId: com.1037solo.classolo
+productName: Classolo
+directories:
+  output: dist
+  buildResources: electron/resources
+files:
+  - package.json
+  - electron/**
+  - out/**
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+publish:
+  provider: generic
+  url: https://your-update-host/classolo/win/  # 宝塔静态目录即可</code></pre>
+      <div class="fit">
+        <p><strong>适合 Classolo 吗？适合。</strong> 不上应用商店、要 NSIS exe、可能要自动更新、可能自建 HTTP 分发——这正是 electron-updater + generic/GitHub 的场景。安装时请显式钉 <code>electron-builder@26.15.7</code>（或 dist-tag <code>v26</code>），不要盲信 npm <code>latest</code>=26.15.3。v27 仍是 alpha，P0 不跟。</p>
+      </div>
+    </article>
+
+    <!-- ========== FORGE ========== -->
+    <article class="card">
+      <h3>打包器 · Electron Forge</h3>
+      <p class="pos">定位：Electron 官方「all-in-one」打包/签名/发布工具链（Plugin / Maker / Publisher）。</p>
+      <p><strong>核心能力（electronforge.io）</strong></p>
+      <ul>
+        <li><code>npx create-electron-app</code>；一等模板是 webpack / vite，不是 Next.js。</li>
+        <li>官方 Windows Maker：<strong>Squirrel.Windows</strong>（Setup.exe + nupkg + RELEASES）与 <strong>WiX MSI</strong>。文档推荐 Squirrel 而不是 MSI。</li>
+        <li>官方自动更新教程：Forge 用 ZIP Maker（macOS）与 Squirrel.Windows <code>remoteReleases</code>；或 <code>update.electronjs.org</code>（要求公开 GitHub 仓库 + GitHub Releases；macOS 还要签名）。</li>
+        <li>pnpm：官方警告 Forge 解析 <code>node_modules</code> 很朴素，<strong>必须</strong> <code>node-linker=hoisted</code>。</li>
+        <li>原生模块：官方 Native Modules 文档写明 Forge 在 dev 与 make 时自动跑 <code>@electron/rebuild</code>。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>1. 最近发布 / 版本</th><td><code>@electron-forge/cli</code> latest <code>7.11.2</code>（2026-05-20）。dist-tag <code>alpha</code> = <code>8.0.0-alpha.10</code>（2026-07-02）。GitHub <code>electron/forge</code> pushed 2026-08-28，仓还活着，但 npm latest 已 102 天。</td></tr>
+        <tr><th>2. 维护方 / bus factor</th><td>Electron 官方 org，wg-ecosystem。7,134 star。npm maintainers 含 marshallofsound、erickzhao 等。bus factor 优于 Nextron / electron-vite。</td></tr>
+        <tr><th>3. 构建复杂度</th><td>中–高：<code>forge.config.*</code> + Maker/Publisher/Plugin 组合。与现有 Next 静态导出要自己写 hook 去 <code>next build</code>。</td></tr>
+        <tr><th>4. install 脚本</th><td>CLI 包 JSON 未见 postinstall。create-electron-app 会拉一串 <code>@electron-forge/*</code>。pnpm 不 hoist 时打包会丢依赖。</td></tr>
+        <tr><th>5. 许可证</th><td>MIT。</td></tr>
+        <tr><th>6. Next 16 兼容</th><td>官方模板无 Next。兼容性 = 你自己把 export 产物塞进 Forge <code>packagerConfig</code>。无官方 Next 16 指南（本次未核实到）。</td></tr>
+        <tr><th>7. 文档质量</th><td>electronforge.io 结构清晰，Maker/Publisher 分页。</td></tr>
+        <tr><th>8. 自动更新 / NSIS</th><td>官方路径是 Squirrel.Windows + Electron 内置 autoUpdater / update.electronjs.org，<strong>不是</strong> electron-updater+NSIS。NSIS 需 <code>@electron-addons/electron-forge-maker-nsis</code> 或 electron-builder 自己的 forge maker——第三方，成熟度低于 builder 一等 NSIS。electron-updater 文档明确不支持 Squirrel.Windows。</td></tr>
+      </table>
+      <p>关键配置示例（官方 Squirrel Maker）：</p>
+<pre><code>// forge.config.js
+module.exports = {
+  makers: [
+    { name: '@electron-forge/maker-squirrel', config: { /* remoteReleases 可选 */ } },
+  ],
+}</code></pre>
+      <div class="fit">
+        <p><strong>适合 Classolo 吗？可作为备选，不是第一选择。</strong> 官方地位高，但 Windows 默认安装器/更新协议与「NSIS exe + 自建 HTTP 更新」不一致；pnpm 还要 hoist。若未来放弃 NSIS、改走 Squirrel 静默安装，再评估。</p>
+      </div>
+    </article>
+
+    <!-- ========== VITE ========== -->
+    <article class="card">
+      <h3>旁路 · electron-vite</h3>
+      <p class="pos">定位：基于 Vite 的 Electron 构建工具（main / preload / renderer 一份配置）。官网强调「为 Electron 的双环境打包」，脚手架是 Vue/React/Vanilla，<strong>不是 Next.js</strong>。</p>
+      <table class="metrics">
+        <tr><th>1. 最近发布 / 版本</th><td>npm latest <code>5.0.0</code>（2025-12-07）。<code>6.0.0-beta.1</code> 于 2026-04-12。距抓取日 latest 已 266 天。</td></tr>
+        <tr><th>2. 维护方 / bus factor</th><td>作者 Alex Wei（<code>alex8088</code>），npm 单一 maintainer <code>alex.wei</code>。个人项目。</td></tr>
+        <tr><th>3. 构建复杂度</th><td>对 Vite 应用低（<code>electron.vite.config.js</code>）。对 Next App Router 等于换框架。</td></tr>
+        <tr><th>4. install 脚本</th><td>未在 latest 包 JSON 中见到 postinstall。peer：Vite 5/6/7。</td></tr>
+        <tr><th>5. 许可证</th><td>MIT。</td></tr>
+        <tr><th>6. Next 16 兼容证据</th><td>官方 Getting Started 无 Next 模板。Vite renderer ≠ Next App Router。评为<strong>不兼容（换栈）</strong>。</td></tr>
+        <tr><th>7. 文档质量</th><td>electron-vite.org 完整，但对象是 Vite 应用。</td></tr>
+        <tr><th>8. 更新 / 体积</th><td>脚手架可勾选 updater 插件；体积仍受 Electron 基线约束。与 Next 选型正交。</td></tr>
+      </table>
+      <p>关键配置示例（官网最简）：</p>
+<pre><code>// electron.vite.config.js
+export default {
+  main: {},
+  preload: {},
+  renderer: {},
+}</code></pre>
+      <div class="fit">
+        <p><strong>适合 Classolo 吗？不适合。</strong> Classolo 已押 Next 16 App Router + EdgeOne 静态导出。electron-vite 解决的是「不用 Next 的 Electron 应用」。</p>
+      </div>
+    </article>
+
+    <section class="cross">
+      <h2>横切能力：麦克风 / WASM / 原生模块 / 通知 / 后台</h2>
+      <p class="lede">这些不随脚手架改变；必须在 Electron main 显式处理。下列均来自本次抓取的官方文档。</p>
+      <table class="metrics">
+        <tr>
+          <th>麦克风 getUserMedia（Windows）</th>
+          <td>
+            Renderer 调 <code>navigator.mediaDevices.getUserMedia</code> 时，session 权限字符串为 <code>media</code>。必须同时实现 <code>ses.setPermissionRequestHandler</code> 与 <code>ses.setPermissionCheckHandler</code>（官方 session 文档：只实现其中一个不完整）。
+            <code>systemPreferences.getMediaAccessStatus('microphone')</code> 在 Windows/macOS 可用；Windows 10 用<strong>全局</strong>隐私开关控制所有 Win32 应用的麦/摄像头，旧版 Windows 对该 API 恒为 <code>granted</code>。
+            <code>askForMediaAccess</code> <strong>仅 macOS</strong>。Windows 被拒后只能引导用户去系统设置（社区常用 <code>ms-settings:privacy-microphone</code>，非 Electron 官方 API）。
+          </td>
+        </tr>
+        <tr>
+          <th>系统通知</th>
+          <td>
+            Main：<code>new Notification().show()</code>；Renderer：Web Notification API。Windows 需要 Start Menu 快捷方式 + AppUserModelID；electron-builder NSIS 文档要求尽早 <code>app.setAppUserModelId(appId)</code>。开发期未安装时通知可能静默失败。
+          </td>
+        </tr>
+        <tr>
+          <th>「请勿关机」/ 后台任务</th>
+          <td>
+            <code>powerSaveBlocker.start('prevent-app-suspension' | 'prevent-display-sleep')</code> 只能阻止休眠/息屏，<strong>不能阻止用户关机</strong>。关机提醒应发 Notification。本次未核实到 Electron 有拦截 Windows 关机的官方 API。
+          </td>
+        </tr>
+        <tr>
+          <th>PGlite WASM</th>
+          <td>
+            官方：浏览器用 <code>idb://</code>（推荐）或 Worker 内 <code>opfs-ahp://</code>；Node/Bun 用目录路径 / <code>NodeFS</code>。Electron renderer ≈ Chrome（IndexedDB 可用）；Electron main ≈ Node（应把数据目录指到 <code>app.getPath('userData')</code>）。
+            自定义协议须 <code>standard + secure + supportFetchAPI</code>，否则 IndexedDB 在非标准 scheme 上默认关闭。
+            若将来用 SharedArrayBuffer / 某些 Worker VFS，需在 <code>protocol.handle</code> 响应里自行加 COOP/COEP——PGlite 文件系统文档未写 Electron 专页，COOP 头方案标「需实测」。
+            PGlite 是 WASM/TS，<strong>不需要</strong> <code>@electron/rebuild</code>。
+          </td>
+        </tr>
+        <tr>
+          <th>better-sqlite3 等原生模块</th>
+          <td>
+            Electron ABI ≠ 系统 Node。官方：用 <code>@electron/rebuild</code> 4.2.0（npm 2026-07-07，MIT）；Forge 会自动调。Windows 还要求 <code>win_delay_load_hook: true</code>。每次升级 Electron 通常要重编。
+            electron-builder 用 <code>install-app-deps</code> 做同类事。Classolo 架构已选 PGlite，P0 不必引入 better-sqlite3。
+          </td>
+        </tr>
+        <tr>
+          <th>file:// 已知坑</th>
+          <td>
+            相对路径解析失败、web storage 关闭、无法用 HTTP 头送 CSP、XSS 可读任意本地文件。Next 的 <code>/_next/static</code> 与 <code>trailingSlash</code> 路由在 <code>file://</code> 下极易 404。官方结论：自定义协议。
+          </td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="history">
+      <h2>决策历史</h2>
+      <ol>
+        <li>
+          <strong>2026-08-30 · AI 初步推荐：静态导出 + 特权自定义协议 + electron-builder（NSIS）+ electron-updater。</strong>
+          理由：与已落地的 <code>output:'export'</code> / EdgeOne / 本地优先一致；Electron 官方禁止生产依赖 <code>file://</code>；builder 对 NSIS 与非商店自动更新是一等能力。Nextron 只是同一模式的个人脚手架；内嵌 <code>next start</code> 与静态导出互斥且无桌面收益。
+        </li>
+      </ol>
+    </section>
+
+    <footer class="sources">
+      <h2>来源与抓取日期</h2>
+      <p>全部于 <strong>2026-08-30</strong> 联网核验。下列 URL 对应该页陈述；未列出的数字未写入正文。</p>
+      <ol>
+        <li>npm <code>electron@44.0.0</code> · https://registry.npmjs.org/electron/latest · https://unpkg.com/electron@44.0.0/package.json</li>
+        <li>Electron v44.0.0 发行说明（Chromium 152.0.7977.54 / Node 24.18.1 / V8 15.2）· https://github.com/electron/electron/releases/tag/v44.0.0 · https://releases.electronjs.org/release/v44.0.0</li>
+        <li>GitHub release asset 体积 · https://api.github.com/repos/electron/electron/releases/tags/v44.0.0 （<code>electron-v44.0.0-win32-x64.zip</code> size=157455369）</li>
+        <li>Next.js Static Exports（含不支持 Server Actions 等）· https://nextjs.org/docs/app/building-your-application/deploying/static-exports</li>
+        <li>Next.js <code>output: 'standalone'</code> · https://nextjs.org/docs/pages/api-reference/config/next-config-js/output</li>
+        <li>Electron Security（第 18 条禁用 file://）· https://www.electronjs.org/docs/latest/tutorial/security</li>
+        <li>Electron protocol（registerSchemesAsPrivileged / handle）· https://www.electronjs.org/docs/latest/api/protocol</li>
+        <li>Electron session 权限 · https://www.electronjs.org/docs/latest/api/session</li>
+        <li>systemPreferences.getMediaAccessStatus / askForMediaAccess · https://www.electronjs.org/docs/latest/api/system-preferences</li>
+        <li>Notifications · https://www.electronjs.org/docs/latest/tutorial/notifications</li>
+        <li>powerSaveBlocker · https://www.electronjs.org/docs/latest/api/power-save-blocker</li>
+        <li>Native Node Modules / @electron/rebuild · https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules · npm <code>@electron/rebuild@4.2.0</code></li>
+        <li>nextron 10.3.0 README（Next v16 对照、output export、maintainers）· https://registry.npmjs.org/nextron/latest · https://github.com/saltyshiomix/nextron · API https://api.github.com/repos/saltyshiomix/nextron</li>
+        <li>Nextron Discussion #254（生产无 API routes）· https://github.com/saltyshiomix/nextron/discussions/254</li>
+        <li>electron-builder npm dist-tags / 时间 · registry <code>electron-builder</code> · GitHub https://api.github.com/repos/electron-userland/electron-builder</li>
+        <li>electron-builder NSIS · https://www.electron.build/nsis</li>
+        <li>electron-updater 自动更新 · https://www.electron.build/docs/features/auto-update</li>
+        <li>electron-updater npm · registry latest 6.8.9 / next 7.0.0-alpha.6</li>
+        <li>Electron Forge Getting Started（pnpm hoist、模板）· https://www.electronforge.io/</li>
+        <li>Forge Squirrel.Windows Maker · https://www.electronforge.io/config/makers/squirrel.windows</li>
+        <li>Electron Updating Applications（update.electronjs.org）· https://www.electronjs.org/docs/latest/tutorial/updates</li>
+        <li>@electron-forge/cli 7.11.2 · npm registry · GitHub https://api.github.com/repos/electron/forge</li>
+        <li>electron-vite Getting Started · https://electron-vite.org/guide/ · npm <code>electron-vite@5.0.0</code></li>
+        <li>PGlite About / Filesystems · https://pglite.dev/docs/about · https://pglite.dev/docs/filesystems</li>
+        <li>endoflife.date Electron 44 支持窗（Chrome M152）· https://endoflife.date/electron</li>
+      </ol>
+      <p class="warn">未核实：最终 NSIS 安装包 MB 数；PGlite 在自定义协议下 SharedArrayBuffer/OPFS 是否要 COOP/COEP；electron-builder 构建期下载的 NSIS 工具体积；Forge v8 alpha 的 NSIS 官方化进度。</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Classolo 选型 · 本地数据库 + ORM · 2026-08-30</title>
+  <style>
+    :root {
+      --paper: #F5F1EA;
+      --sheet: #FAF7F1;
+      --ink: #2A2620;
+      --muted: #6B645C;
+      --rule: #DDD6C8;
+      --rule-fine: #E8E2D6;
+      --clay: #D97757;
+      --radius: 5px;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    h1, h2, h3, .serif {
+      font-family: "Iowan Old Style", Palatino, "Palatino Linotype", "Songti SC", "Noto Serif SC", Georgia, serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+    a { color: var(--ink); text-underline-offset: 3px; }
+    a:hover { text-decoration-thickness: 2px; }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .kicker {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    h1 { font-size: clamp(32px, 5vw, 44px); margin: 0 0 16px; }
+    .lede {
+      font-size: 18px;
+      color: var(--ink);
+      max-width: 42em;
+      margin: 0 0 28px;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+      font-size: 13px;
+      color: var(--muted);
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      padding: 12px 0;
+      margin-bottom: 40px;
+    }
+    .layer-note {
+      background: var(--sheet);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 0 0 36px;
+      font-size: 15px;
+    }
+    .layer-note strong { font-weight: 600; }
+    h2 {
+      font-size: 26px;
+      margin: 48px 0 8px;
+    }
+    .section-lead {
+      color: var(--muted);
+      margin: 0 0 20px;
+      font-size: 14px;
+    }
+
+    /* Signature: hard-metric bars */
+    .bars {
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      background: var(--sheet);
+      padding: 8px 0;
+      margin: 0 0 40px;
+    }
+    .bars caption {
+      caption-side: top;
+      text-align: left;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 4px 18px 12px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 148px 1fr 72px;
+      gap: 10px;
+      align-items: center;
+      padding: 7px 18px;
+    }
+    .bar-row + .bar-row { border-top: 1px solid var(--rule-fine); }
+    .bar-name { font-size: 13px; }
+    .bar-name .rec {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--clay);
+      border: 1px solid var(--clay);
+      border-radius: 3px;
+      padding: 0 5px;
+      margin-left: 6px;
+      vertical-align: 1px;
+    }
+    .track {
+      height: 7px;
+      background: #EDE7DB;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%;
+      background: #2A2620;
+      border-radius: 3px;
+    }
+    .fill.rec { background: var(--clay); }
+    .bar-val {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .bars-legend {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 10px 18px 4px;
+      border-top: 1px solid var(--rule);
+      margin-top: 6px;
+    }
+
+    .card {
+      background: var(--sheet);
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 22px 22px 20px;
+      margin: 0 0 18px;
+    }
+    .card.recommend {
+      border-color: var(--clay);
+    }
+    .card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 14px;
+      margin-bottom: 8px;
+    }
+    .card-head h3 {
+      font-size: 22px;
+      margin: 0;
+    }
+    .badge {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      padding: 2px 7px;
+    }
+    .badge.clay {
+      color: var(--clay);
+      border-color: var(--clay);
+    }
+    .pos {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 0 0 14px;
+    }
+    .caps {
+      margin: 0 0 16px;
+      padding: 0;
+      list-style: none;
+    }
+    .caps li {
+      padding: 4px 0 4px 14px;
+      position: relative;
+      font-size: 15px;
+    }
+    .caps li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 5px;
+      height: 5px;
+      border-radius: 1px;
+      background: var(--ink);
+    }
+    table.metrics {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin: 0 0 16px;
+    }
+    table.metrics th,
+    table.metrics td {
+      text-align: left;
+      vertical-align: top;
+      padding: 8px 10px 8px 0;
+      border-bottom: 1px solid var(--rule-fine);
+    }
+    table.metrics th {
+      width: 34%;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    table.metrics td { font-variant-numeric: tabular-nums; }
+    .warn {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    pre {
+      margin: 0 0 16px;
+      padding: 14px 16px;
+      background: #F3EEE4;
+      border: 1px solid var(--rule-fine);
+      border-radius: var(--radius);
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.5;
+      font-family: "Cascadia Code", "Sarasa Mono SC", "SF Mono", Consolas, monospace;
+    }
+    .code-cap {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    .verdict {
+      border-top: 1px solid var(--rule);
+      padding-top: 12px;
+      font-size: 15px;
+    }
+    .verdict .lbl {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .history {
+      border: 1px solid var(--rule);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-top: 8px;
+    }
+    .history time {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .sources {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .sources h2 { font-size: 20px; margin-top: 0; color: var(--ink); }
+    .sources ol { padding-left: 1.2em; }
+    .sources li { margin: 6px 0; }
+    .sources code { font-size: 12px; }
+    footer.note {
+      margin-top: 28px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 28px 16px 56px; }
+      .bar-row { grid-template-columns: 1fr; gap: 4px; }
+      .bar-val { text-align: left; }
+      table.metrics th { width: 40%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="kicker">Classolo · library showcase</p>
+    <h1>本地数据库 + ORM</h1>
+    <p class="lede">
+      分层结论：要「迁 Supabase 时 schema/SQL 零重写」，层 A 的 <strong>PGlite</strong> 是唯一同时满足 Postgres 方言、免安装、浏览器 IndexedDB 与 Node/Electron 文件持久化的候选；ORM 配 <strong>Drizzle</strong>（<code>pg-core</code>）。层 B 更快但方言锁死 SQLite；层 C 根本没有可迁移的 SQL。
+    </p>
+    <div class="meta-row">
+      <span>抓取日 2026-08-30</span>
+      <span>npm registry + 官方文档，禁止记忆数字</span>
+      <span>Classolo：Next.js 16 / React 19 / Node 22.11.0 / Electron exe</span>
+    </div>
+
+    <div class="layer-note">
+      <strong>权重。</strong>后期共享库是 1037Solo 的 Supabase（Postgres）。本地阶段选 SQLite 或 IndexedDB，等于接受迁移时重写 schema、SQL 与 Drizzle dialect。本页把「方言兼容」权重大于「原生写入峰值」。
+    </div>
+
+    <h2>硬指标横向对比</h2>
+    <p class="section-lead">签名元素：仅用已核实的 npm unpacked 体积与「距本次抓取的发布时间」。陶土色只标当前推荐项。</p>
+
+    <div class="bars">
+      <div class="bar-row">
+        <div class="bar-name">PGlite <span class="rec">推荐</span></div>
+        <div class="track"><div class="fill rec" style="width:93%"></div></div>
+        <div class="bar-val">25.4 MB · 4 天前</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-name">better-sqlite3</div>
+        <div class="track"><div class="fill" style="width:100%"></div></div>
+        <div class="bar-val">27.3 MB · 25 天前</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-name">node:sqlite</div>
+        <div class="track"><div class="fill" style="width:0%"></div></div>
+        <div class="bar-val">0（内置）· 随 Node</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-name">Dexie</div>
+        <div class="track"><div class="fill" style="width:12%"></div></div>
+        <div class="bar-val">3.23 MB · 16 天前</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-name">localforage</div>
+        <div class="track"><div class="fill" style="width:2%"></div></div>
+        <div class="bar-val">0.47 MB · 4.2 年前</div>
+      </div>
+      <p class="bars-legend">
+        条长 = npm <code>dist.unpackedSize</code> 相对 better-sqlite3（27,302,969 B = 100%）。node:sqlite 无 npm 包。日期相对 2026-08-30。PGlite 体积主要是 WASM，不是 JS。
+      </p>
+    </div>
+
+    <!-- ========== LAYER A ========== -->
+    <h2>层 A · 内嵌 Postgres</h2>
+    <p class="section-lead">目标：本地跑 Postgres 方言，迁 Supabase 只换连接。</p>
+
+    <article class="card recommend">
+      <div class="card-head">
+        <h3>@electric-sql/pglite</h3>
+        <span class="badge clay">当前推荐</span>
+        <span class="badge">层 A</span>
+      </div>
+      <p class="pos">定位：Electric 的 WASM Postgres，在浏览器、Node、Bun、Deno 进程内跑完整 Postgres，无需安装服务。官方说明「不像先前方案那样套 Linux VM，就是 WASM 里的 Postgres」。</p>
+      <ul class="caps">
+        <li>持久化：Node/Bun 目录（<code>NodeFS</code>）；浏览器 <code>idb://</code>（IndexedDB）；全平台内存 <code>memory://</code>。官方当前建议浏览器用 IndexedDB，因 OPFS AHP 不被 Safari 支持。</li>
+        <li>IndexedDB 按「整文件 blob」flush，「每次查询后可能数毫秒」；提供 <code>relaxedDurability</code>：先返回结果，再异步 flush。</li>
+        <li>Live query 扩展：<code>@electric-sql/pglite/live</code> 的 <code>live.query</code> / <code>incrementalQuery</code> / <code>changes</code>。</li>
+        <li>限制（README）：single user / single connection。</li>
+        <li>许可证正文：可在 Apache-2.0 与 PostgreSQL License 中二选一。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>版本 / 发布</th><td>npm latest <strong>0.5.8</strong>，时间戳 2026-08-26T18:40:08.921Z</td></tr>
+        <tr><th>维护方</th><td>Electric DB Limited；GitHub <code>electric-sql/pglite</code>：15,937 stars、437 forks、159 open issues；最近 push 2026-08-26。Bus factor：公司仓库，具体贡献者人数未核实。</td></tr>
+        <tr><th>体积</th><td>
+          npm unpacked <strong>25,437,263 B</strong>（308 files）；本次 <code>npm pack</code> tarball <strong>8,791,923 B</strong>。<br />
+          核心资源实测：<code>pglite.wasm</code> 10,088,161 B（Bundlephobia gzip 3,443,918 B）；<code>pglite.data</code> 6,295,316 B（gzip 2,142,456 B）；<code>initdb.wasm</code> 395,242 B（gzip 147,195 B）。<br />
+          官方 package 自述「only 3.7mb gzipped」——与本次 gzip 分项合计（WASM+data ≈ 5.59 MB gzip）不一致；此处并列写出，不以记忆数字调和。
+        </td></tr>
+        <tr><th>传递依赖</th><td>生产 <code>dependencies</code>：<strong>0</strong></td></tr>
+        <tr><th>install 脚本</th><td>无 <code>install</code> / <code>postinstall</code>（仅有 <code>prepublishOnly</code>）。无原生编译。</td></tr>
+        <tr><th>许可证</th><td>npm 字段 Apache-2.0；README 声明与 PostgreSQL License 双许可。</td></tr>
+        <tr><th>兼容性</th><td>
+          浏览器：IndexedDB / 内存 / OPFS AHP（Chrome、Firefox；Safari 否）。<br />
+          Node：文件系统。<br />
+          Electron main：走 Node FS（<code>app.getPath('userData')</code> 为架构预定路径）。<br />
+          Electron renderer：曾有 <code>IN_NODE</code> 误判（issue #813，2025-10 开、2026-06-19 关；PR #951 / #1033）。0.5.8 发布于修复之后；<strong>本次未在 Electron 里复测</strong>。<br />
+          Drizzle：官方专页 <code>drizzle-orm/pglite</code>，peer <code>@electric-sql/pglite &gt;= 0.2.0</code>。<br />
+          迁 Supabase：同一套 <code>pgTable</code> / SQL，换 <code>node-postgres</code> 或 <code>postgres.js</code> 驱动。
+        </td></tr>
+        <tr><th>文档 / TS</th><td>pglite.dev 分文件系统、live、API；包内 <code>dist/index.d.ts</code>。</td></tr>
+        <tr><th>高频写入口碑</th><td>
+          官方 benchmarks（M2 MacBook Air，单位 ms/次，越小越好）：insert small row — Memory <strong>0.058</strong>；IndexedDB <strong>21.041</strong>；IDB + relaxedDurability <strong>0.085</strong>；OPFS AHP <strong>3.946</strong>；OPFS + relaxed <strong>0.079</strong>。<br />
+          官方 SQLite suite：25,000 INSERTs in a transaction，PGlite Memory <strong>0.292 s</strong>；同页 native 基线 better-sqlite3 磁盘 <strong>0.019 s</strong>。<br />
+          官方结论：fsync/flush「quite slow」，尤其浏览器 IndexedDB；relaxed durability「likely suitable for many embedded use cases」。无「每几秒一批、45–90 分钟课」的官方 TPS 数字 → 场景级压测标<strong>未核实</strong>。
+        </td></tr>
+        <tr><th>周下载</th><td>npm downloads API：15,287,953（2026-08-22–28）</td></tr>
+      </table>
+      <p class="code-cap">官方入门（pglite.dev/docs，2026-08-30 抓取）</p>
+<pre>import { PGlite } from '@electric-sql/pglite'
+
+const db = new PGlite('./path/to/pgdata')     // Node 文件
+const idb = new PGlite('idb://my-pgdata')     // 浏览器 IndexedDB
+await db.query(`select 'Hello world' as message;`)</pre>
+      <div class="verdict">
+        <span class="lbl">适合 Classolo 吗</span>
+        <strong>适合，作为 P0–P2 主库。</strong>这是唯一把「免安装单机 exe + 开发期浏览器可跑 + 迁 Supabase 不改 dialect」三条同时接上的选项。写入策略必须按官方口径做：Electron 用 NodeFS；开发期 IndexedDB 打开 <code>relaxedDurability</code>；转写流先内存缓冲再批量 <code>INSERT</code>，不要每句同步 flush。
+      </div>
+    </article>
+
+    <!-- ========== LAYER B ========== -->
+    <h2>层 B · SQLite</h2>
+    <p class="section-lead">原生快，但 Drizzle 要走 <code>sqlite-core</code>，与 Postgres/Supabase 不是同一套 schema。</p>
+
+    <article class="card">
+      <div class="card-head">
+        <h3>better-sqlite3</h3>
+        <span class="badge">层 B</span>
+      </div>
+      <p class="pos">定位：README 自称 “The fastest and simplest library for SQLite in Node.js”，同步 API，官方建议 <code>journal_mode = WAL</code>。</p>
+      <ul class="caps">
+        <li>v13.0.0（2026-07-21）迁到 N-API；prebuilt 打进包内；去掉已弃用的 <code>prebuild-install</code>。</li>
+        <li>源 <code>package.json</code>（tag v13.0.3）：<code>gypfile: false</code>，<strong>没有</strong> <code>install</code> / <code>postinstall</code>；仍发布 <code>binding.gyp</code> 与 <code>prebuilds/**</code>。</li>
+        <li>官方 troubleshooting 仍写：Electron 使用 <code>electron-rebuild</code>；asar 需 unpack native。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>版本 / 发布</th><td>npm latest <strong>13.0.3</strong>，2026-08-05T03:47:44.751Z；<code>engines.node &gt;= 22</code></td></tr>
+        <tr><th>维护方</th><td>作者 Joshua Wise（<code>WiseLibs/better-sqlite3</code>）。GitHub 7,462 stars、474 forks、71 open issues；push 2026-08-10。历史 bus factor 偏低（个人维护者主导）；组织账号存在，贡献者人数未核实。</td></tr>
+        <tr><th>体积</th><td>unpacked <strong>27,302,969 B</strong>（68 files）。体积来自多平台 prebuilds + SQLite 源，不是 JS。</td></tr>
+        <tr><th>传递依赖</th><td>1：<code>node-addon-api ^8.0.0</code></td></tr>
+        <tr><th>install 脚本</th><td>
+          源码无 install 脚本。<span class="warn">但 npm 对含 binding.gyp 的包仍可能隐式跑 <code>node-gyp rebuild</code></span>（issue #1503，2026-07-24；#1516 后续跟进）。2026-08-20 仍有 Windows「<code>npm install</code> 要 Python」报告。Electron：issue 讨论指出 <code>@electron/rebuild</code> 见 <code>binding.gyp</code> 就会重编，不一定用包内 N-API prebuild。
+        </td></tr>
+        <tr><th>许可证</th><td>MIT</td></tr>
+        <tr><th>兼容性</th><td>
+          Electron main：可以，需 rebuild/unpack。<br />
+          Renderer / 浏览器：<strong>不能</strong>（原生 addon）。开发期未套 Electron 时，浏览器里跑不了同一驱动。<br />
+          Drizzle：官方 <code>drizzle-orm/better-sqlite3</code>，peer <code>better-sqlite3 &gt;= 7</code>。<br />
+          迁 Supabase：SQLite ↔ Postgres 要重写 schema（Drizzle 官方讨论 #5269 / #5519：两套 table 定义）。
+        </td></tr>
+        <tr><th>文档 / TS</th><td>仓库 <code>docs/api.md</code> 等。自身无捆绑 TypeScript types；<code>@types/better-sqlite3</code> 是 Drizzle 的 optional peer，本次未单独核其版本。</td></tr>
+        <tr><th>高频写入</th><td>
+          README 基准（相对自身 1x）：100 行事务插入，<code>sqlite</code>+<code>sqlite3</code> 慢 15.6x。原生基线（PGlite 官网同页）：25,000 INSERTs in a transaction，磁盘 <strong>0.019 s</strong>。<br />
+          适合转写流，但这是 SQLite 方言的快。
+        </td></tr>
+        <tr><th>周下载</th><td>10,357,275（2026-08-22–28）</td></tr>
+      </table>
+      <p class="code-cap">官方 README（npm / GitHub，2026-08-30）</p>
+<pre>import Database from 'better-sqlite3';
+const db = new Database('foobar.db', options);
+db.pragma('journal_mode = WAL');
+const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);</pre>
+      <div class="verdict">
+        <span class="lbl">适合 Classolo 吗</span>
+        <strong>不适合做主库</strong>——不是因为它慢或死，而是方言与 Electron 原生模块。可留作 Repository 层的性能逃生舱（架构文档已写），代价是双 schema。P0 不要同时维护两套。
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <h3>node:sqlite</h3>
+        <span class="badge">层 B</span>
+        <span class="badge">Node 内置</span>
+      </div>
+      <p class="pos">定位：Node.js 官方 SQLite 模块（<code>lib/sqlite.js</code>），<code>DatabaseSync</code> 同步连接。无 npm 安装、无第三方原生 addon。</p>
+      <ul class="caps">
+        <li>Added in：v22.5.0。</li>
+        <li>v23.4.0 / <strong>v22.13.0</strong>：不再藏在 <code>--experimental-sqlite</code> 后，仍标 experimental。</li>
+        <li>v25.7.0：升为 Release Candidate。</li>
+        <li>Node 最新文档（页标题 v26.8.1）：Stability <strong>1.2 — Release candidate</strong>。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>版本 / 发布</th><td>随 Node 发版。本次文档来源：nodejs.org/docs/latest 与 github.com/nodejs/node <code>doc/api/sqlite.md</code>。无独立 semver 包。</td></tr>
+        <tr><th>维护方</th><td>Node.js 项目（OpenJS）。Bus factor 相对第三方 addon 高。</td></tr>
+        <tr><th>体积</th><td>应用侧 <strong>0</strong> 额外 unpacked（运行时已含）。</td></tr>
+        <tr><th>传递依赖</th><td>0</td></tr>
+        <tr><th>install 脚本</th><td>无。这是相对 better-sqlite3 的核心优点。</td></tr>
+        <tr><th>许可证</th><td>随 Node（MIT）。本次未另抓 LICENSE 文件，标<strong>未单独核实包级 SPDX</strong>。</td></tr>
+        <tr><th>兼容性</th><td>
+          Classolo 锁定 <strong>Node 22.11.0</strong>，早于 v22.13.0，按官方 History 表仍需 <code>--experimental-sqlite</code>。<br />
+          Electron：第三方文章称新版 Electron 已带该模块；<strong>Classolo 尚未选定 Electron 版本，未核实</strong>。Renderer 无 Node 时仍不能直接用。<br />
+          浏览器：不能。<br />
+          Drizzle：官方页 <code>drizzle-orm/node-sqlite</code>，安装命令写的是 <code>drizzle-orm@rc</code>（1.0 RC），不是 latest 0.45.2。0.45.2 的 peer 列表里<strong>没有</strong> <code>node:sqlite</code>。<br />
+          迁 Supabase：同 better-sqlite3，SQLite 方言。
+        </td></tr>
+        <tr><th>文档 / TS</th><td>Node API 文档完整，含 TS 风格示例。</td></tr>
+        <tr><th>高频写入</th><td>官方 API 页无 TPS 数字。同步 API，重写入会占事件循环。场景口碑<strong>未核实</strong>。</td></tr>
+      </table>
+      <p class="code-cap">官方 API 文档示例（nodejs.org，2026-08-30）</p>
+<pre>import { DatabaseSync } from 'node:sqlite';
+const database = new DatabaseSync(':memory:');</pre>
+      <div class="verdict">
+        <span class="lbl">适合 Classolo 吗</span>
+        <strong>现阶段不适合做主库。</strong>Node 22.11 仍是 experimental 窗口；Drizzle 稳定版未列该驱动；方言仍是 SQLite。等 Electron 版本与 Node 稳定度对齐后，可再评估「无 rebuild 的 SQLite 后备」，不能替代 Postgres 迁移目标。
+      </div>
+    </article>
+
+    <!-- ========== LAYER C ========== -->
+    <h2>层 C · 纯前端 KV / 文档（反方）</h2>
+    <p class="section-lead">用来回答「是否根本不需要 SQL」。结论：Classolo 需要。</p>
+
+    <article class="card">
+      <div class="card-head">
+        <h3>Dexie</h3>
+        <span class="badge">层 C</span>
+      </div>
+      <p class="pos">定位：IndexedDB 的最小封装。官方：Promise API、声明式 schema、事务、索引查询、live queries、TypeScript。</p>
+      <ul class="caps">
+        <li><code>liveQuery</code> / React <code>useLiveQuery</code> 是相对 localforage 的差异能力（来自 dexie.org 文档摘要页）。</li>
+        <li>同步走 <code>dexie-cloud-addon</code>（可选、托管）；与 Classolo「P0–P2 本地、后期 Supabase」不是同一条路。</li>
+      </ul>
+      <table class="metrics">
+        <tr><th>版本 / 发布</th><td>npm latest <strong>4.4.5</strong>，2026-08-14T19:53:41.987Z</td></tr>
+        <tr><th>维护方</th><td>作者 David Fahlander；GitHub <code>dexie/Dexie.js</code> 14,552 stars、713 forks、594 open issues；push 2026-08-28。npm maintainers：dfahlander、anders.ekdahl。</td></tr>
+        <tr><th>体积</th><td>unpacked 3,234,788 B（25 files）。Bundlephobia：95,405 B / gzip 31,150 B。</td></tr>
+        <tr><th>传递依赖</th><td>0</td></tr>
+        <tr><th>install 脚本</th><td>无 install/postinstall（仅 test/build）。</td></tr>
+        <tr><th>许可证</th><td>Apache-2.0</td></tr>
+        <tr><th>兼容性</th><td>浏览器 / Electron renderer（Chromium IndexedDB）。Electron main 文件库：不是它的模型。Drizzle：无。迁 Supabase：无 SQL，需重写存储层与查询。</td></tr>
+        <tr><th>文档 / TS</th><td>dexie.org；包内 <code>dist/dexie.d.ts</code>。</td></tr>
+        <tr><th>高频写入</th><td>官方无「转写流每几秒一批」数据。IndexedDB 适合中等吞吐；关系查询与 Postgres 迁移不在产品范围内。</td></tr>
+        <tr><th>周下载</th><td>2,330,842（2026-08-22–28）</td></tr>
+      </table>
+      <p class="code-cap">官方 Getting started（dexie.org，2026-08-30）</p>
+<pre>import Dexie from 'dexie';
+
+export const db = new Dexie("mydb");
+db.version(1).stores({
+  friends: "++id, name, age",
+  todos: "++id, title, done"
+});</pre>
+      <div class="verdict">
+        <span class="lbl">适合 Classolo 吗</span>
+        <strong>不适合做主库。</strong>反方成立的前提是放弃 SQL 与零重写迁移。转写段落、知识卡片、题目、复习记录是关系数据；Dexie 无法把 <code>pgTable</code> 带到 Supabase。
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <h3>localforage</h3>
+        <span class="badge">层 C</span>
+      </div>
+      <p class="pos">定位：Mozilla 出品的异步 KV，「像 localStorage，底层 IndexedDB / WebSQL / localStorage」。只有 get/set，没有查询语言。</p>
+      <table class="metrics">
+        <tr><th>版本 / 发布</th><td>npm latest <strong>1.10.0</strong>，<strong>2022-06-19T13:20:55.257Z</strong>（距抓取日约 4.2 年无 npm 发版）</td></tr>
+        <tr><th>维护方</th><td>GitHub <code>localForage/localForage</code> 25,809 stars；<strong>最近 git push 2024-07-30</strong>。高 star、低近期提交。</td></tr>
+        <tr><th>体积</th><td>unpacked 467,670 B。Bundlephobia：28,346 B / gzip 8,680 B。README 对 1.7.3 的自述：minified ~29kB、gzipped ~8.8kB。</td></tr>
+        <tr><th>传递依赖</th><td>1：<code>lie@3.1.1</code></td></tr>
+        <tr><th>install 脚本</th><td>无 postinstall。</td></tr>
+        <tr><th>许可证</th><td>Apache-2.0</td></tr>
+        <tr><th>兼容性</th><td>浏览器 KV。无 SQL、无 Drizzle、无 Postgres 迁移路径。TS：README 说明允许 <code>allowSyntheticDefaultImports</code>。</td></tr>
+        <tr><th>高频写入</th><td>KV 覆盖写入。不适合按时间戳查询一节课的转写流。</td></tr>
+        <tr><th>周下载</th><td>8,772,844（2026-08-22–28）——存量依赖，不代表活跃演进。</td></tr>
+      </table>
+      <p class="code-cap">官方 README（npm，2026-08-30）</p>
+<pre>await localforage.setItem('key', 'value');
+const value = await localforage.getItem('somekey');</pre>
+      <div class="verdict">
+        <span class="lbl">适合 Classolo 吗</span>
+        <strong>不适合。</strong>停更的 KV 封装，回答了反方问题：Classolo <em>需要</em> SQL。
+      </div>
+    </article>
+
+    <!-- ========== ORM ========== -->
+    <h2>ORM</h2>
+    <p class="section-lead">同一套 TypeScript schema 要能连 PGlite，将来只换 driver 连 Supabase。</p>
+
+    <article class="card recommend">
+      <div class="card-head">
+        <h3>drizzle-orm</h3>
+        <span class="badge clay">当前推荐</span>
+        <span class="badge">ORM</span>
+      </div>
+      <p class="pos">定位：SQL-first、代码即 schema。官方为 PGlite、better-sqlite3、node:sqlite（RC）、node-postgres、postgres.js 各有连接指南。迁 Supabase 走 PostgreSQL 驱动即可。</p>
+      <table class="metrics">
+        <tr><th>版本 / 发布</th><td>
+          dist-tag <code>latest</code>：<strong>0.45.2</strong>（2026-03-27T17:06:27.140Z）。<br />
+          dist-tag <code>rc</code>：<strong>1.0.0-rc.4</strong>（npm modified 2026-08-12）。<br />
+          官方 PGlite / node-sqlite / PostgreSQL 入门页的安装命令目前写的是 <code>drizzle-orm@rc</code>。
+        </td></tr>
+        <tr><th>维护方</th><td>drizzle-team。GitHub 35,627 stars、1,562 forks、<strong>1,998 open issues</strong>；push 2026-08-28。issue 量大，需正视。</td></tr>
+        <tr><th>体积</th><td>
+          npm unpacked 10,420,427 B（2,666 files，全 dialect 源码都在包内）。<br />
+          Bundlephobia 主入口：26,978 B / gzip <strong>8,264 B</strong>；<code>dependencyCount: 0</code>。
+        </td></tr>
+        <tr><th>传递依赖</th><td>运行时 dependencies：<strong>0</strong>。约 29 个 optional peer（含 <code>@electric-sql/pglite</code>、<code>better-sqlite3</code>、<code>pg</code>）。</td></tr>
+        <tr><th>install 脚本</th><td>无 postinstall。配套 <code>drizzle-kit@0.31.10</code>（2026-08-11，MIT，unpacked 10,267,084 B；deps：tsx、esbuild、brocli、esm-loader）。</td></tr>
+        <tr><th>许可证</th><td>Apache-2.0（orm）；kit 为 MIT</td></tr>
+        <tr><th>兼容性</th><td>
+          PGlite：<code>import { drizzle } from 'drizzle-orm/pglite'</code>。<br />
+          better-sqlite3：<code>drizzle-orm/better-sqlite3</code>。<br />
+          node:sqlite：文档要求 <code>@rc</code>。<br />
+          Supabase：<code>pg-core</code> + <code>node-postgres</code> / <code>postgres.js</code>。<br />
+          官方明确：Postgres 与 SQLite 不能共用一份 schema 对象。
+        </td></tr>
+        <tr><th>文档 / TS</th><td>orm.drizzle.team；schema 用 TypeScript 推断，无 generate client 步骤（相对 Prisma）。</td></tr>
+        <tr><th>周下载</th><td>20,422,558（2026-08-22–28）</td></tr>
+      </table>
+      <p class="code-cap">官方 PGlite 指南（orm.drizzle.team/docs/connect-pglite，2026-08-30）</p>
+<pre>import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
+
+const client = new PGlite();
+const db = drizzle({ client });
+await db.select().from(users);</pre>
+      <div class="verdict">
+        <span class="lbl">适合 Classolo 吗</span>
+        <strong>适合。</strong>用 <code>drizzle-orm/pg-core</code> 定义会话 / 转写 / 笔记 / 卡片 / 题目；本地 <code>drizzle-orm/pglite</code>，生态期换 Postgres driver。注意：官网 PGlite 页仍写「2.6mb gzipped」，与 PGlite 0.5.8 自述 3.7mb 及本次实测不符，以 registry 为准。
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <h3>Prisma</h3>
+        <span class="badge">ORM 对照</span>
+      </div>
+      <p class="pos">定位：schema-first ORM。官方博客：Query Engine 从 Rust 迁到 TypeScript + WASM Query Compiler；Prisma 7 起 Rust-free 为默认。PGlite 不在一等驱动列表，官方 Database drivers 页将其列在 <em>community-maintained</em> adapters。</p>
+      <table class="metrics">
+        <tr><th>版本 / 发布</th><td>
+          <code>prisma</code> dist-tag <code>latest</code> 当前是 <strong>8.0.0-rc.12</strong>（modified 2026-08-27）——<span class="warn">CLI latest 已指向 8 RC</span>。<br />
+          <code>@prisma/client</code> dist-tag <code>latest</code>：<strong>7.10.0</strong>（2026-08-25T12:54:34.412Z）。<br />
+          对照用的稳定客户端按 <strong>7.10.0</strong> 计；8.0 仍为 RC，不建议 P0 钉它。
+        </td></tr>
+        <tr><th>维护方</th><td>Prisma。GitHub <code>prisma/orm</code>：47,569 stars、2,536 forks、2,580 open issues；updated 2026-08-30。公司级维护。</td></tr>
+        <tr><th>体积</th><td>
+          <code>prisma@7.10.0</code> unpacked <strong>42,043,673 B</strong>（48 files）。<br />
+          <code>@prisma/client@7.10.0</code> unpacked <strong>74,458,946 B</strong>（75 files）。<br />
+          官方博客称相对旧 Rust 引擎「bundle size 降 85–90%」，<strong>未在所抓文章中给出绝对值 KB</strong>。第三方「~7KB vs ~600KB」数字本次不采用。
+        </td></tr>
+        <tr><th>传递依赖</th><td>
+          client 7.10.0：<code>@prisma/client-runtime-utils@7.10.0</code>（1）。<br />
+          CLI 7.10.0：<code>@prisma/engines</code>、<code>@prisma/config</code>、<code>mysql2</code>、<code>postgres</code>、<code>@prisma/dev</code>、<code>@prisma/studio-core</code>。
+        </td></tr>
+        <tr><th>install 脚本</th><td>client 脚本为 test/build，无典型 postinstall 字段（本次 npm view）。仍有 <code>prisma generate</code> 代码生成步骤，比 Drizzle 重。</td></tr>
+        <tr><th>许可证</th><td>Apache-2.0</td></tr>
+        <tr><th>兼容性</th><td>
+          Postgres / SQLite 均为官方能力；PGlite 靠社区 adapter（如 npm <code>pglite-prisma-adapter</code>，本次未把它升为一等候选）。<br />
+          Electron / 浏览器内嵌：Prisma 的生成客户端 + WASM compiler 比旧 Rust 二进制友好，但<strong>不是</strong>为「WASM Postgres 跑在 renderer」设计的一等路径。<br />
+          迁 Supabase：Postgres provider 可行，但本地阶段要么装真 Postgres，要么绑社区 PGlite adapter。
+        </td></tr>
+        <tr><th>文档 / TS</th><td>prisma.io 完整；类型来自 generate。</td></tr>
+        <tr><th>周下载</th><td>prisma 17,006,913；@prisma/client 15,996,192（2026-08-22–28）</td></tr>
+      </table>
+      <p class="code-cap">官方 PostgreSQL 连接形态（Drizzle 对照用；Prisma 7 文档强调 driver adapter。PGlite 非一等。）</p>
+<pre>// Prisma 7：datasource 在 prisma.config.ts；Client 经 adapter 连驱动
+// PGlite 不在 Prisma 维护的 adapter 列表里（官方 drivers 页：community）
+generator client {
+  provider = "prisma-client"
+}</pre>
+      <div class="verdict">
+        <span class="lbl">适合 Classolo 吗</span>
+        <strong>不选。</strong>体积、generate 步骤、PGlite 非一等支持，都与「WASM 内嵌 Postgres + 静态导出 Electron」摩擦更大。Prisma 7 已去掉 Rust 二进制，仍重于 Drizzle。
+      </div>
+    </article>
+
+    <h2>决策历史</h2>
+    <div class="history">
+      <p><time datetime="2026-08-30">2026-08-30</time> — AI 初步推荐 <strong>PGlite 0.5.8 + drizzle-orm（pg-core，稳定版 0.45.2 或官网指定的 1.0 RC）</strong>。理由：这是本次核过的选项里，唯一能在免安装、浏览器可跑、Electron 文件库、以及迁 Supabase 不换方言四条上同时得分的组合；IndexedDB 单次 insert 21 ms 的官方数字用 <code>relaxedDurability</code> + 批量写入缓解，而不是换 SQLite 提前放弃零重写。</p>
+    </div>
+
+    <section class="sources">
+      <h2>来源与抓取日期</h2>
+      <p>全部为 2026-08-30 本次访问。数字以 registry / 官方页为准；第三方评测里的绝对 KB 未写入结论。</p>
+      <ol>
+        <li>npm registry：<code>@electric-sql/pglite@0.5.8</code>、<code>better-sqlite3@13.0.3</code>、<code>drizzle-orm@0.45.2</code> / <code>1.0.0-rc.4</code>、<code>drizzle-kit@0.31.10</code>、<code>prisma</code> dist-tags、<code>prisma@7.10.0</code>、<code>@prisma/client@7.10.0</code>、<code>dexie@4.4.5</code>、<code>localforage@1.10.0</code></li>
+        <li>npm downloads API last-week（窗口 2026-08-22–28）</li>
+        <li>Bundlephobia API：pglite@0.5.8、drizzle-orm@0.45.2、dexie@4.4.5、localforage@1.10.0</li>
+        <li><code>npm pack @electric-sql/pglite@0.5.8</code> 文件列表与字节（pglite.wasm / pglite.data / initdb.wasm）</li>
+        <li><a href="https://pglite.dev/docs/">pglite.dev/docs</a> · <a href="https://pglite.dev/docs/filesystems">filesystems</a> · <a href="https://pglite.dev/docs/live-queries">live-queries</a> · <a href="https://pglite.dev/docs/api">api</a> · <a href="https://pglite.dev/benchmarks">benchmarks</a></li>
+        <li><a href="https://www.npmjs.com/package/@electric-sql/pglite">npm @electric-sql/pglite</a> README（双许可、single connection）</li>
+        <li>GitHub <a href="https://github.com/electric-sql/pglite">electric-sql/pglite</a> · issue <a href="https://github.com/electric-sql/pglite/issues/813">#813</a></li>
+        <li><a href="https://github.com/WiseLibs/better-sqlite3">WiseLibs/better-sqlite3</a> · tag v13.0.3 package.json · <a href="https://github.com/WiseLibs/better-sqlite3/releases/tag/v13.0.0">v13.0.0 notes</a> · <a href="https://github.com/WiseLibs/better-sqlite3/blob/v13.0.3/docs/troubleshooting.md">troubleshooting.md</a> · issues <a href="https://github.com/WiseLibs/better-sqlite3/issues/1481">#1481</a> · <a href="https://github.com/WiseLibs/better-sqlite3/issues/1503">#1503</a></li>
+        <li>Node.js <a href="https://nodejs.org/docs/latest/api/sqlite.html">SQLite API</a> · <a href="https://github.com/nodejs/node/blob/d90d9d55/doc/api/sqlite.md">doc/api/sqlite.md</a></li>
+        <li>Drizzle：<a href="https://orm.drizzle.team/docs/connect-pglite">connect-pglite</a> · <a href="https://orm.drizzle.team/docs/get-started/pglite-new">pglite-new</a> · <a href="https://orm.drizzle.team/docs/sqlite/get-started-sqlite">SQLite get-started</a> · <a href="https://orm.drizzle.team/docs/connect-node-sqlite">connect-node-sqlite</a> · <a href="https://orm.drizzle.team/docs/get-started-postgresql">PostgreSQL</a> · GitHub discussions #5269 #5519</li>
+        <li>Prisma：<a href="https://www.prisma.io/blog/announcing-prisma-orm-7-0-0">Prisma 7 公告</a> · <a href="https://www.prisma.io/blog/from-rust-to-typescript-a-new-chapter-for-prisma-orm">Rust→TS</a> · <a href="https://www.prisma.io/docs/orm/core-concepts/supported-databases/database-drivers">database drivers</a> · GitHub <a href="https://github.com/prisma/orm">prisma/orm</a></li>
+        <li><a href="https://dexie.org/docs/Tutorial/Getting-started">dexie.org Getting started</a> · GitHub dexie/Dexie.js、localForage/localForage</li>
+      </ol>
+      <p class="footer note">未写入页内的项（贡献者精确人数、Electron 选定版本是否内置 node:sqlite、45 分钟课的实测 TPS）均标「未核实」，未编造。</p>
+    </section>
+  </div>
+</body>
+</html>

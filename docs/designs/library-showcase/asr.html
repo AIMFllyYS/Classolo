@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Classolo · 实时语音转文字 ASR 选型</title>
+  <style>
+    :root {
+      --paper: #F5F1EA;
+      --paper-2: #EFE9DF;
+      --ink: #2A2620;
+      --muted: #6B645B;
+      --line: #DDD4C6;
+      --line-2: #EDE6DB;
+      --clay: #D97757;
+      --r: 5px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+    body {
+      font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, .serif {
+      font-family: Georgia, "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    a { color: var(--ink); text-underline-offset: 3px; }
+    code, pre {
+      font-family: "Cascadia Code", "SF Mono", Consolas, "Courier New", monospace;
+      font-size: 12.5px;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 72px 28px 96px; }
+    header.hero { margin-bottom: 56px; }
+    .kicker {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 18px;
+    }
+    h1 { font-size: 40px; line-height: 1.2; margin: 0 0 18px; }
+    .lede { font-size: 18px; color: var(--muted); max-width: 46em; margin: 0; }
+    .meta { margin-top: 22px; font-size: 13px; color: var(--muted); }
+    h2 { font-size: 26px; margin: 64px 0 16px; }
+    h3 { font-size: 22px; margin: 0 0 8px; }
+    .note {
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 16px 18px;
+      background: var(--paper-2);
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .warn { color: #8A3B1E; }
+    .ok { color: #3D5A3A; }
+    .no { color: #8A3B1E; }
+
+    /* Signature: horizontal metric bars */
+    .bars { display: grid; gap: 8px; margin: 18px 0 4px; }
+    .bar-row { display: grid; grid-template-columns: 7.5em 1fr 3.2em; gap: 10px; align-items: center; }
+    .bar-row span { font-size: 12px; color: var(--muted); }
+    .bar-row .val { text-align: right; }
+    .track {
+      height: 4px;
+      background: var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .fill { height: 100%; background: var(--ink); border-radius: 2px; }
+    .fill.rec { background: var(--clay); }
+
+    .matrix { overflow-x: auto; margin: 28px 0 8px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th { font-weight: 600; color: var(--muted); font-size: 12px; letter-spacing: 0.04em; }
+    td.num { white-space: nowrap; }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 28px 28px 24px;
+      margin: 28px 0;
+      background: var(--paper);
+    }
+    .card.rec {
+      border-color: var(--clay);
+      box-shadow: inset 3px 0 0 var(--clay);
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--clay);
+      border: 1px solid var(--clay);
+      border-radius: var(--r);
+      padding: 2px 8px;
+      margin-bottom: 10px;
+    }
+    .layer { font-size: 12px; color: var(--muted); margin: 0 0 6px; letter-spacing: 0.06em; }
+    .pos { font-size: 15px; color: var(--muted); margin: 0 0 16px; }
+    .caps { margin: 0 0 16px; padding: 0; list-style: none; }
+    .caps li { position: relative; padding-left: 1.1em; margin: 4px 0; font-size: 14.5px; }
+    .caps li::before { content: "·"; position: absolute; left: 0; color: var(--muted); }
+    .metrics { width: 100%; margin: 8px 0 16px; }
+    .metrics th { width: 9.5em; }
+    .verdict {
+      border-top: 1px solid var(--line);
+      margin-top: 18px;
+      padding-top: 14px;
+      font-size: 15px;
+    }
+    pre {
+      background: var(--paper-2);
+      border: 1px solid var(--line-2);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      overflow-x: auto;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+    .src { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+    .hist { list-style: none; padding: 0; margin: 0; }
+    .hist li {
+      display: grid;
+      grid-template-columns: 7.5em 1fr;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14.5px;
+    }
+    .hist time { color: var(--muted); font-size: 13px; }
+    footer.notes { margin-top: 56px; font-size: 13px; color: var(--muted); }
+    footer.notes ol { padding-left: 1.2em; }
+    footer.notes li { margin: 6px 0; }
+    @media (max-width: 720px) {
+      .wrap { padding: 40px 18px 64px; }
+      h1 { font-size: 30px; }
+      .bar-row { grid-template-columns: 6em 1fr 2.6em; }
+      .hist li { grid-template-columns: 1fr; gap: 4px; }
+      .card { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <p class="kicker">Classolo · library showcase</p>
+      <h1>实时语音转文字（ASR）</h1>
+      <p class="lede">
+        Electron（Chromium 开源内核）里，浏览器原生 SpeechRecognition <strong>不能作为默认方案</strong>。
+        课堂 45–90 分钟不丢字，主路径应是国内云端流式 WebSocket；离线免 key 用本地流式模型兜底。
+      </p>
+      <p class="meta">调研日期 2026-08-30 · 下列数字与日期均来自本次联网抓取 · 抓不到标「未核实」</p>
+    </header>
+
+    <p class="note">
+      分层结论：<strong>L2 云端流式是 Electron 主方案</strong>（推荐腾讯云实时语音识别 WebSocket，讯飞 RTASR 作第二实现）；
+      <strong>L3 sherpa-onnx 是免 key 兜底</strong>；
+      <strong>L1 Web Speech API 仅适用于日后 Chrome/Edge 网页版，不进 Electron 默认路径</strong>。
+      架构文档里「Web Speech API 默认免 key」与 2026-08 的 Electron 现状冲突，应改为 ASRProvider 多实现。
+    </p>
+
+    <h2>横向对比条</h2>
+    <p class="src">签名元素：五条硬指标的相对适配度。满格 = 本次已核实满足 Classolo 约束；半格 = 有条件；低格 = 不满足或关键项未核实。不是官方质量分数。</p>
+
+    <div class="matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>候选</th>
+            <th>层</th>
+            <th>Electron</th>
+            <th>真流式 partial</th>
+            <th>中文 / 热词</th>
+            <th>45–90 min</th>
+            <th>免 key</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Web Speech API</td><td>L1</td>
+            <td>低</td><td>高（Chrome）</td><td>中</td><td>低</td><td>高（Chrome 云）</td>
+          </tr>
+          <tr>
+            <td>讯飞 RTASR</td><td>L2</td>
+            <td>高</td><td>高</td><td>高</td><td>中高</td><td>无</td>
+          </tr>
+          <tr>
+            <td>腾讯云实时 ASR</td><td>L2</td>
+            <td>高</td><td>高</td><td>高（含医疗引擎）</td><td>高</td><td>每月 5 小时免费</td>
+          </tr>
+          <tr>
+            <td>阿里云 ISI</td><td>L2</td>
+            <td>高</td><td>高</td><td>高</td><td>高</td><td>试用 3 个月</td>
+          </tr>
+          <tr>
+            <td>OpenAI gpt-live-transcribe</td><td>L2</td>
+            <td>高</td><td>高</td><td>中（keywords）</td><td>未核实</td><td>无</td>
+          </tr>
+          <tr>
+            <td>sherpa-onnx</td><td>L3</td>
+            <td>高（Node addon）</td><td>高</td><td>高</td><td>高（本地无会话墙）</td><td>高</td>
+          </tr>
+          <tr>
+            <td>whisper.cpp</td><td>L3</td>
+            <td>高（子进程 / addon）</td><td>中（分块）</td><td>中</td><td>中</td><td>高</td>
+          </tr>
+          <tr>
+            <td>FunASR</td><td>L3</td>
+            <td>中（Python 旁路）</td><td>高</td><td>高</td><td>高</td><td>高</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== L1 ===== -->
+    <article class="card" id="web-speech">
+      <p class="layer">L1 · 浏览器 / 系统原生</p>
+      <h3>Web Speech API（SpeechRecognition）</h3>
+      <p class="pos">浏览器内置识别接口。Chrome 默认走云端；Chrome 139 起可选设备端。Electron 开源 Chromium 不含这套专有能力。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill" style="width:8%"></div></div><span class="val">不可用</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill" style="width:85%"></div></div><span class="val">Chrome</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill" style="width:40%"></div></div><span class="val">有限</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill" style="width:18%"></div></div><span class="val">需重启</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill" style="width:70%"></div></div><span class="val">仅 Chrome</span></div>
+      </div>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>官网能力（MDN / Chrome）</strong></p>
+      <ul class="caps">
+        <li>MDN：部分浏览器（如 Chrome）使用<strong>服务端识别引擎</strong>，音频会发到网络服务，离线不可用。</li>
+        <li><code>continuous</code> / <code>interimResults</code> / <code>lang</code>；实验属性 <code>processLocally</code> 强制设备端。</li>
+        <li>Chrome 139 增加 On-device Web Speech API：可查询语言包、安装、在本地与云端之间选择。</li>
+        <li>Electron 文档中的 <code>GOOGLE_API_KEY</code> 仅说明用于<strong>地理位置</strong>，未写 SpeechRecognition。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>Electron PR #52955 于 2026-08-19 合并：为 <code>OnDeviceSpeechRecognition</code> 注册 stub，<code>Available()</code> 返回 <code>kUnavailable</code>，<code>Install()</code> 返回 false。Chrome 139 设备端能力在 Electron 里被明确标为不可用。</td></tr>
+        <tr><th>维护方</th><td>W3C 规范 + 各浏览器实现。Chromium 云端识别依赖 Google 专有组件；Electron 维护者（issue #46143）写明：远程转写依赖 Google 服务器，本地模型也是专有，标准 Electron/Chromium 没有。</td></tr>
+        <tr><th>接入 / 体积</th><td>无 npm。渲染进程直接 <code>webkitSpeechRecognition</code>。</td></tr>
+        <tr><th>install 脚本</th><td>不适用</td></tr>
+        <tr><th>许可证</th><td>Web 平台 API。无 GPL 依赖树。</td></tr>
+        <tr><th>跑在哪</th><td>仅浏览器 renderer。Electron 实测（issue #31732、#46143、#47837，后者环境 Electron 37.2.3）<code>error: "network"</code>。</td></tr>
+        <tr><th>流式 / 中文</th><td>Chrome 支持 interim。中文需 <code>lang</code>（如 zh-CN / zh-Hans）。热词：规范有 <code>SpeechRecognitionPhrase</code> 上下文偏置，Electron 不可用故无意义。标点：MDN 有实验属性，Electron 未核实。</td></tr>
+        <tr><th>文档 / TS</th><td>MDN 完整。DOM 类型随 TypeScript DOM lib。</td></tr>
+        <tr><th>计费 / 长时</th><td>Chrome 云端对网页免开发者 key，计费条款未核实。规范未提供可配置静音超时；社区 issue 称 Chrome 会因 no-speech / 约 60s 触发 <code>onend</code>，需自行 restart。45–90 分钟连续：无官方稳定性机制。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方示例（MDN SpeechRecognition）</p>
+<pre>const recognition = new SpeechRecognition();
+recognition.continuous = false;
+recognition.lang = "en-US";
+recognition.interimResults = false;
+recognition.maxAlternatives = 1;
+recognition.onresult = (event) => {
+  const color = event.results[0][0].transcript;
+};</pre>
+      <p class="src">来源：developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？不适合作为 Electron 默认。</strong> 2026-08 Electron 仍把云端识别绑在 Chrome 专有 Google 服务上，并把 Chrome 139 的设备端接口 stub 成不可用。网页版若只跑 Chrome/Edge 可作免 key 实验通道，不能承担课堂生死线。</p>
+    </article>
+
+    <!-- ===== L2 讯飞 ===== -->
+    <article class="card" id="xfyun">
+      <p class="layer">L2 · 云端流式 · 第二实现</p>
+      <h3>讯飞开放平台 · 实时语音转写 RTASR</h3>
+      <p class="pos">科大讯飞的长连接实时转写。协议是 WebSocket，不是官方 npm。课堂场景应对准 RTASR，不要用 60 秒上限的「语音听写 IAT」。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill" style="width:88%"></div></div><span class="val">自实现 WS</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill" style="width:95%"></div></div><span class="val">type 0/1</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill" style="width:90%"></div></div><span class="val">控制台</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill" style="width:72%"></div></div><span class="val">15s 心跳</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill" style="width:10%"></div></div><span class="val">需购买</span></div>
+      </div>
+
+      <ul class="caps">
+        <li>官方：通过 WebSocket 长连接，将连续音频流实时识别为文字流。</li>
+        <li>地址 <code>wss://rtasr.xfyun.cn/v1/ws</code>；PCM 16 kHz / 16 bit / 单声道；建议每 40 ms 发送 1280 字节。</li>
+        <li>语种默认中文；<code>pd=medical</code> 医疗等领域；<code>punc=0</code> 可过滤标点（默认返回标点）。</li>
+        <li><code>type</code>：0 最终结果，1 中间结果。<code>wp=p</code> 为标点。</li>
+        <li>热词：控制台「个性化热词」上传，每行 ≤10 字、≤2000 行，UTF-8 中文、不能有数字和字母，发布后约 1 小时生效。</li>
+        <li>另有「实时语音转写大模型」：中英 + 202 种方言；错误码 37007 单次上限 8 小时。标准版单次总时长本次<strong>未核实</strong>。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>标准版 API 文档本次抓取仍在线。大模型文档同期可访问。主站产品页为前端渲染，<strong>未抓到发布日期数字</strong>。接口本身由讯飞持续运营，不作「停更」警示。</td></tr>
+        <tr><th>维护方</th><td>科大讯飞股份有限公司。公司产品，bus factor 低。</td></tr>
+        <tr><th>接入 / 体积</th><td>官方：任意能发 WebSocket 的语言。无官方 npm。社区包 <code>xfyun-sdk@1.5.1</code>（2026-05-06，MIT，无 pre/postinstall）对接的是 <code>wss://iat-api.xfyun.cn</code> 听写，最长 60 s，<strong>不能当 RTASR 用</strong>。</td></tr>
+        <tr><th>install 脚本</th><td>自实现协议：无。勿把 IAT 社区 SDK 当依赖。</td></tr>
+        <tr><th>许可证</th><td>云服务条款。自写 WS 客户端无 GPL。</td></tr>
+        <tr><th>跑在哪</th><td>Electron renderer 或 main 均可连 wss。鉴权 HMAC-SHA1（appid+ts，apiKey）。签名可放 main，避免把 apiKey 暴露到页面。</td></tr>
+        <tr><th>计费</th><td>文档：产品页领取免费试用；控制台购买时长与路数，「价格可见」。www.xfyun.cn 产品页本次<strong>未抓到价表数字</strong>，标未核实。不要用第三方镜像站数字冒充主站。</td></tr>
+        <tr><th>长时机制</th><td>发送间隔超时 <strong>15 秒</strong>，超时报 37005 / 10107 类并断开。课堂停顿超过 15 s 必须继续送静音 PCM 或重连。标准版总时长上限未核实；大模型 8 小时。</td></tr>
+        <tr><th>中文质量</th><td>官方未在本次页面给出可引用的公开 WER。口碑/评测：<strong>未核实</strong>。</td></tr>
+        <tr><th>文档 / TS</th><td>中文 WebAPI 文档完整，含签名与结果 JSON。无官方 TypeScript SDK。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方协议要点（讯飞 RTASR 文档）</p>
+<pre>// 握手
+wss://rtasr.xfyun.cn/v1/ws?appid=...&amp;ts=...&amp;signa=...&amp;pd=medical
+// signa = Base64( HMAC-SHA1( MD5(appid + ts), api_key ) )
+// 每 40ms 发送 1280 字节 PCM；结束发送 {"end": true}
+// 结果 data.cn.st.type: 0 最终 / 1 中间</pre>
+      <p class="src">来源：xfyun.cn/doc/asr/rtasr/API.html · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？适合作为第二个云实现。</strong> 中文课堂是讯飞主场，<code>pd=medical</code> 与标点、中间结果都有。热词不能含拉丁缩写（医学英文药名不友好），且要等控制台发布。主方案若已选腾讯，讯飞仍值得做成 ASRProvider 备选，方便用户用已有讯飞账号。</p>
+    </article>
+
+    <!-- ===== L2 腾讯 ===== -->
+    <article class="card rec" id="tencent">
+      <p class="badge">当前推荐 · 云端主方案</p>
+      <p class="layer">L2 · 云端流式</p>
+      <h3>腾讯云 · 实时语音识别（WebSocket）</h3>
+      <p class="pos">国内云厂商的会议级流式 ASR。有医疗/教育引擎、请求级热词、无官方「最长识别时间」上限，文档 2026-08 仍在更新。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill rec" style="width:92%"></div></div><span class="val">自实现 WS</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill rec" style="width:96%"></div></div><span class="val">slice 0/1/2</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill rec" style="width:96%"></div></div><span class="val">医疗引擎</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill rec" style="width:90%"></div></div><span class="val">无总时长墙</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill rec" style="width:22%"></div></div><span class="val">5 h/月</span></div>
+      </div>
+
+      <ul class="caps">
+        <li>官方：WebSocket 对实时音频流识别，边说边出文字。文档最近更新 2026-08-04。</li>
+        <li>地址 <code>wss://asr.cloud.tencent.com/asr/v2/&lt;appid&gt;?...&amp;signature=</code>。</li>
+        <li>行业：通用、金融、游戏、教育、<strong>医疗</strong>。引擎含 <code>16k_zh_medical</code>、<code>16k_zh_edu</code>、<code>16k_zh</code> 等。</li>
+        <li><code>slice_type</code>：0 一段开始，1 识别中（非稳态），2 结束（稳态）。</li>
+        <li>热词：<code>hotword_id</code> 或请求内 <code>hotword_list</code>（最多 128 个，「词|权重」，单条最多 10 个汉字）。</li>
+        <li><code>filter_punc</code> 过滤句末句号；<code>convert_num_mode</code> 中文数字转阿拉伯数字。</li>
+        <li>注意：<code>Hy-ASR-3.0-preview</code> 仅支持 60 秒音频，课堂不可用。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>接口文档 2026-08-04；计费概述 2026-08-24。GitHub <code>TencentCloud/tencentcloud-speech-sdk-js</code> 最近提交 2026-07-27。npm 同名包仍停在 1.0.0（2022-05-07）——<span class="warn">npm 发布 &gt;12 个月，不要用 npm 包，跟仓库或自写协议</span>。</td></tr>
+        <tr><th>维护方</th><td>腾讯云。公司产品。</td></tr>
+        <tr><th>接入 / 体积</th><td>官方协议 WebSocket。JS SDK 仓库存在，无强制 npm。REST 包 <code>tencentcloud-sdk-nodejs-asr@4.1.303</code>（2026-08-27，Apache-2.0，有 d.ts，无 pre/postinstall）是云 API，不是这条实时 WS。</td></tr>
+        <tr><th>install 脚本</th><td>自实现：无。官方 JS SDK npm 无 pre/postinstall。</td></tr>
+        <tr><th>许可证</th><td>JS SDK npm 标 ISC；Node REST SDK Apache-2.0。自写 WS 无 GPL。</td></tr>
+        <tr><th>跑在哪</th><td>renderer 采麦 → 16 k PCM → wss。SecretKey 签名必须在 main / 本地，禁止打进渲染页。</td></tr>
+        <tr><th>计费</th><td>实时 ASR 每月免费 5 小时。预付费：30 小时 / 90 元（3 元/小时）。后付费日结：0–299 小时/日 3.20 元/小时。大模型 2.0 预付费 60 小时 / 60 元（1 元/小时），后付费 1.0 元/小时。一节 90 分钟按通用后付费约 4.8 元。</td></tr>
+        <tr><th>长时机制</th><td>FAQ：<strong>不能设置识别最长时间，不需要就断开</strong>。要求 1:1 实时率；间隔超时：要求表写「超过 6 秒可能断开」，错误码 4008 写「超过 15 秒未发送」——以文档原文并存，实现上按 ≤6 s 持续送帧。needvad 时超 60 s 会强制切分；<code>max_speak_time</code> 5–90 s 强制断句（默认 60 s），不是结束会话。<code>vad_silence_time</code> 500–2000 ms。</td></tr>
+        <tr><th>中文质量</th><td>官方未给可引用 WER。医疗引擎与请求级热词是产品能力，不是评测分数。公开横向评测：<strong>未核实</strong>。</td></tr>
+        <tr><th>文档 / TS</th><td>参数表完整。JS SDK 示例为 JS，无官方严格 TS 类型包。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方结果示例（腾讯云文档）</p>
+<pre>{"code":0,"message":"success","voice_id":"RnKu9FODFHK5FPpsrN",
+ "result":{"slice_type":1,"index":0,"voice_text_str":"实时"}}
+{"code":0,"message":"success",
+ "result":{"slice_type":2,"voice_text_str":"实时语音识别"}}
+{"code":0,"final":1}</pre>
+      <p class="src">来源：cloud.tencent.com/document/product/1093/48982 · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？适合作为 Electron 云端主实现。</strong> 同时满足：医疗引擎、课堂长度无总时长墙、partial/final 清晰、热词可随医学词表注入、国内链路、免费额度够开发。P0 自写 WebSocket + HMAC，不要依赖停更的 npm 1.0.0。</p>
+    </article>
+
+    <!-- ===== L2 阿里 ===== -->
+    <article class="card" id="aliyun">
+      <p class="layer">L2 · 云端流式 · 可选第三家</p>
+      <h3>阿里云智能语音交互 · 实时语音识别</h3>
+      <p class="pos">NLS 长语音 WebSocket。文档写明适合会议演讲、视频直播等长时间不间断识别；有医疗内容分析模型与标点/ITN 开关。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill" style="width:80%"></div></div><span class="val">自实现 WS</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill" style="width:90%"></div></div><span class="val">中间结果</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill" style="width:85%"></div></div><span class="val">vocabulary_id</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill" style="width:88%"></div></div><span class="val">不限时长</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill" style="width:28%"></div></div><span class="val">试用 3 月</span></div>
+      </div>
+
+      <ul class="caps">
+        <li>外网 <code>wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1</code>（另有北京/深圳）。</li>
+        <li><code>enable_intermediate_result</code> / <code>enable_punctuation_prediction</code> / <code>enable_inverse_text_normalization</code>。</li>
+        <li>普通话模型表含「医疗内容分析」。热词 <code>vocabulary_id</code>；自学习 <code>customization_id</code>。</li>
+        <li>FAQ：实时语音识别<strong>不限制时长</strong>。空闲超时：建连后超过 <strong>10 s</strong> 无数据 → 40000004 IDLE_TIMEOUT。</li>
+        <li><code>max_sentence_silence</code> 200–6000 ms（文档一处写 2000 ms 上限，以实现时再对照当前页）。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>官方 Node SDK <code>alibabacloud-nls@1.0.4</code> 发布于 <strong>2023-10-13</strong>。<span class="warn">超过 12 个月未发版，警示：不要当活 SDK，应自写 WebSocket。</span> 服务本身仍在售。</td></tr>
+        <tr><th>维护方</th><td>阿里云。公司产品。</td></tr>
+        <tr><th>接入 / 体积</th><td>协议 WebSocket + Token。npm <code>alibabacloud-nls</code> unpacked ≈ 243 KB，Apache-2.0，无 types，无 pre/postinstall。</td></tr>
+        <tr><th>install 脚本</th><td>无 preinstall/postinstall。</td></tr>
+        <tr><th>许可证</th><td>SDK Apache-2.0。依赖含 ws 等，本次未见 GPL。</td></tr>
+        <tr><th>跑在哪</th><td>Node 示例用 <code>SpeechTranscription</code>。Electron 可在 main 跑 SDK（过旧）或自写 WS。Token 用 AccessKey 换，有过期。</td></tr>
+        <tr><th>计费</th><td>新用户试用 3 个月，实时识别试用最多 2 路。商用后付费实时识别标准价 3.50 元/小时（0–299 小时/日）。预付费 30 小时 / 100 元（3.33 元/小时）。文档声明价格仅供参考。超单次时长上限会失败且不扣费——标准实时接口 FAQ 写不限制时长。</td></tr>
+        <tr><th>中文质量</th><td>公开 WER：<strong>未核实</strong>。</td></tr>
+        <tr><th>文档 / TS</th><td>接口说明详细。Node SDK 无官方 typings。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方 Node 示例结构（阿里云文档）</p>
+<pre>const Nls = require("alibabacloud-nls");
+const st = new Nls.SpeechTranscription({ url, appkey, token });
+st.on("changed", (msg) => console.log(msg));   // 中间结果
+st.on("completed", (msg) => console.log(msg));
+await st.start(st.defaultStartParams(), true, 6000);</pre>
+      <p class="src">来源：help.aliyun.com/zh/isi/developer-reference/sdk-for-node-js · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？能用，不优先。</strong> 长时会议定位对口，但官方 Node SDK 停更近三年，接入成本与腾讯/讯飞同级却没有更强的课堂差异化。作为第三家云备份即可。</p>
+    </article>
+
+    <!-- ===== L2 OpenAI ===== -->
+    <article class="card" id="openai">
+      <p class="layer">L2 · 云端流式 · 可选（已有 OpenAI key 的用户）</p>
+      <h3>OpenAI · gpt-live-transcribe</h3>
+      <p class="pos">Realtime transcription 专用模型。WebSocket / WebRTC 出 transcript delta。不是旧的 gpt-4o-transcribe 文件接口。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill" style="width:78%"></div></div><span class="val">WS 服务端</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill" style="width:90%"></div></div><span class="val">delta</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill" style="width:55%"></div></div><span class="val">keywords</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill" style="width:40%"></div></div><span class="val">未核实</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill" style="width:5%"></div></div><span class="val">无</span></div>
+      </div>
+
+      <ul class="caps">
+        <li>官方推荐实时路径：<code>gpt-live-transcribe</code>；文件用 <code>gpt-transcribe</code>。</li>
+        <li>支持 <code>prompt</code>、<code>keywords</code>（产品名/药物/缩写）、<code>languages</code>（含 <code>zh-cn</code>、<code>cmn</code>）。</li>
+        <li><code>delay</code>：minimal / low / medium / high / xhigh，延迟换准确率。</li>
+        <li>不返回词级时间戳、说话人、confidence。</li>
+        <li>npm <code>openai@7.8.0</code>（2026-08-27，Apache-2.0，自带 d.ts，无 pre/postinstall，unpacked ≈ 15.3 MB）。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>官方 SDK 2026-08-27。Realtime transcription 指南本次抓取在线。</td></tr>
+        <tr><th>维护方</th><td>OpenAI。公司产品。</td></tr>
+        <tr><th>接入</th><td>WebSocket：<code>v1/realtime</code> / transcription session。浏览器也可用 WebRTC。Electron 建议 main 持 key。</td></tr>
+        <tr><th>install 脚本</th><td>无。</td></tr>
+        <tr><th>许可证</th><td>SDK Apache-2.0。无 GPL。</td></tr>
+        <tr><th>计费</th><td>官方定价页：gpt-live-transcribe <strong>$0.017 / minute</strong> 会话音频（约 $1.02 / 小时）。gpt-transcribe $0.0045 / minute。国内访问延迟与可用性：<strong>未核实</strong>。</td></tr>
+        <tr><th>长时</th><td>文档要求用真实长会话做评测，未写 90 分钟上限或静音超时秒数。标<strong>未核实</strong>。</td></tr>
+        <tr><th>中文质量</th><td>支持 zh-cn 语言提示。医学中文公开评测：<strong>未核实</strong>。</td></tr>
+        <tr><th>文档 / TS</th><td>官方文档 + 一流 TS SDK。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方示例（OpenAI Realtime transcription）</p>
+<pre>{
+  "type": "session.update",
+  "session": {
+    "type": "transcription",
+    "audio": {
+      "input": {
+        "format": { "type": "audio/pcm", "rate": 24000 },
+        "transcription": {
+          "model": "gpt-live-transcribe",
+          "keywords": ["premium plan", "AC-42"],
+          "languages": ["zh-cn"],
+          "delay": "low"
+        },
+        "turn_detection": null
+      }
+    }
+  }
+}</pre>
+      <p class="src">来源：developers.openai.com/api/docs/guides/realtime-transcription · pricing · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？仅作可选 Provider。</strong> TS 与 keywords 对医学词友好，但单价约为腾讯通用后付费的数倍，且中国课堂网络未核实。已有 OpenAI key 的用户可开关启用，不能当默认。</p>
+    </article>
+
+    <p class="note">L2 未展开：Deepgram Nova-3 已支持 <code>zh</code>/<code>zh-CN</code> 流式（changelog 2026-03；<code>@deepgram/sdk@5.9.0</code>，2026-08-28，MIT）。流式 Nova-3 现价 $0.0048/min。美国服务、国内课堂延迟与医学中文评测未核实，故不进 P0 主路径。</p>
+
+    <!-- ===== L3 sherpa ===== -->
+    <article class="card" id="sherpa">
+      <p class="layer">L3 · 本地模型 · 免 key 兜底（推荐）</p>
+      <h3>sherpa-onnx</h3>
+      <p class="pos">Next-gen Kaldi / ONNX Runtime 的端侧识别。官方提供真正的 streaming Zipformer，以及中英双语预训练模型；Node 有 native addon。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill" style="width:86%"></div></div><span class="val">main addon</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill" style="width:92%"></div></div><span class="val">OnlineRecognizer</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill" style="width:80%"></div></div><span class="val">hotwords 文件</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill" style="width:85%"></div></div><span class="val">本地无墙</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="val">离线</span></div>
+      </div>
+
+      <ul class="caps">
+        <li>GitHub k2-fsa/sherpa-onnx：本地 STT，streaming 与 offline 都支持。Apache-2.0。stars 本次页面显示 14485。</li>
+        <li>npm <code>sherpa-onnx-node@1.13.6</code>（2026-08-18）：node-addon-api，Node ≥16，支持多线程。</li>
+        <li>可选依赖平台包，例如 <code>sherpa-onnx-win-x64@1.13.6</code> unpacked ≈ 23.0 MB。无 pre/postinstall。</li>
+        <li>中英流式模型 <code>sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20</code>：encoder fp32 315 M / int8 174 M，decoder ~13–14 M，joiner 13 M / int8 3.1 M。</li>
+        <li>文档示例 RTF 0.035（6.625 s 波形 / 0.234 s）。热词文件；中文标点需另加 CT-Transformer 标点模型。</li>
+        <li>贡献集中：csukuangfj 1605 次 vs 第二 18 次——社区活跃但核心提交者高度集中。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>npm 与 GitHub 同步 1.13.6，2026-08-18。</td></tr>
+        <tr><th>维护方</th><td>next-gen Kaldi / Xiaomi 相关团队（文档示例 Copyright Xiaomi）。核心提交者一人为主。</td></tr>
+        <tr><th>接入</th><td>Electron <strong>main process</strong> 加载 native addon（与 Electron ABI 对齐）。renderer 只采音经 IPC 送 Float32 PCM。另有 WASM 包 <code>sherpa-onnx</code> unpacked ≈ 15.1 MB，文档写 WASM 不支持多线程、需 Node ≥18。</td></tr>
+        <tr><th>install 脚本</th><td>无 preinstall/postinstall。optionalDependencies 拉二进制，体积计入安装。</td></tr>
+        <tr><th>许可证</th><td>Apache-2.0。未见 GPL。模型许可以各模型页为准，本次 zipformer 包未逐一打开许可证文件，模型条款标<strong>未核实全文</strong>。</td></tr>
+        <tr><th>计费</th><td>无。CPU 占用未在本次做本机实测。</td></tr>
+        <tr><th>长时</th><td>本地无云端静音踢线。endpoint 规则可配 trailing silence。45–90 min 内存泄漏：<strong>未核实</strong>，实现时需自测。</td></tr>
+        <tr><th>文档 / TS</th><td>JS 示例为 CommonJS，包无 <code>types</code> 字段。需项目内手写 d.ts。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方示例（sherpa 文档 Streaming ASR）</p>
+<pre>const sherpa_onnx = require('sherpa-onnx-node');
+const recognizer = new sherpa_onnx.OnlineRecognizer(config);
+const stream = recognizer.createStream();
+stream.acceptWaveform({ sampleRate: 16000, samples });
+while (recognizer.isReady(stream)) recognizer.decode(stream);
+console.log(recognizer.getResult(stream));</pre>
+      <p class="src">来源：k2-fsa.github.io/sherpa/onnx/javascript-api/examples/streaming_asr.html · registry.npmjs.org/sherpa-onnx-node · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？适合作为免 key / 离线兜底。</strong> 这是 L3 里唯一「官方 Node + 真流式中文 + 近期发版 + Apache」齐套的选项。P0 不要默认用它上课（医学词、标点、CPU），但设置里必须能切到本地，保证没网也能记笔记。</p>
+    </article>
+
+    <!-- ===== L3 whisper ===== -->
+    <article class="card" id="whisper">
+      <p class="layer">L3 · 本地模型 · 课后转写 / 弱实时</p>
+      <h3>whisper.cpp</h3>
+      <p class="pos">OpenAI Whisper 的 C++ 推理。维护极活跃，但架构是分块识别，不是云 ASR 那种词级 partial。官方 addon 注明可用于 node 和 electron。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill" style="width:75%"></div></div><span class="val">子进程/addon</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill" style="width:45%"></div></div><span class="val">stream 分块</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill" style="width:40%"></div></div><span class="val">prompt</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill" style="width:50%"></div></div><span class="val">分块拼接</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="val">离线</span></div>
+      </div>
+
+      <ul class="caps">
+        <li>仓库 ggml-org/whisper.cpp，MIT。README 模型体积：tiny 75 MiB，base 142 MiB，small 466 MiB，medium 1.5 GiB，large 2.9 GiB。</li>
+        <li>v1.9.3 发布 2026-08-20（pre-release）；nightly b4938 同日。Windows x64 预编译包 8.0 MB（不含模型）。</li>
+        <li><code>examples/addon.node</code>：cmake-js，文档写可在 node 和 electron 推理，并支持 VAD。</li>
+        <li>官方 stream.wasm demo（ggml.ai，页面 Build time Fri Aug 14 2026）。</li>
+        <li>npm <code>whisper.cpp@1.0.3</code> 停在 2022-12-12，<span class="warn">不要用这个 npm 名</span>。社区 <code>nodejs-whisper@0.3.1</code>（2026-08-03，MIT，有 d.ts）是文件转写封装，不是流式；<code>whisper-node@1.1.1</code> 停于 2023-11-29。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>2026-08-20（v1.9.3 / b4938）。</td></tr>
+        <tr><th>维护方</th><td>ggml-org（Georgi Gerganov 及社区）。stars 本次 53274。组织维护，bus factor 优于单人玩具库。</td></tr>
+        <tr><th>接入</th><td>推荐：打包官方 Windows 二进制 + 子进程 <code>whisper-stream</code>；或自己编 Electron addon。不要走 2022 npm。</td></tr>
+        <tr><th>install 脚本</th><td>官方源码无 npm 安装脚本。nodejs-whisper 无 pre/postinstall，但使用时需本机 make/MinGW <strong>编译</strong> whisper.cpp。</td></tr>
+        <tr><th>许可证</th><td>MIT。模型为 OpenAI Whisper 权重（MIT）。未见 GPL。</td></tr>
+        <tr><th>中文</th><td>多语模型含 Chinese。流式体验取决于 chunk 长度。医学热词无一等公民，可用 prompt。<strong>中文实时口碑未做公开评测核实</strong>。</td></tr>
+        <tr><th>文档 / TS</th><td>C++/CMake 文档强。Node 绑定是 example，不是一等 TS SDK。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方 addon 说明（whisper.cpp examples/addon.node）</p>
+<pre>// 文档原句：perform whisper model reasoning in node and electron
+npx cmake-js compile -T addon.node -B Release
+const { whisper } = require("./build/Release/addon.node");
+whisper({ language: "zh", model: "ggml-base.bin", fname_inp: "audio.wav" });</pre>
+      <p class="src">来源：github.com/ggml-org/whisper.cpp · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？适合课后文件转写，不适合当课堂主实时。</strong> 维护与许可证最好；延迟和 partial 形态不如 sherpa 流式 Zipformer。可留作「整段录音再转一遍」的离线增强。</p>
+    </article>
+
+    <!-- ===== L3 FunASR ===== -->
+    <article class="card" id="funasr">
+      <p class="layer">L3 · 本地模型 · 中文最强开源工具链（P1 旁路）</p>
+      <h3>FunASR（modelscope/FunASR）</h3>
+      <p class="pos">阿里达摩院开源工业 ASR 工具包。Paraformer 流式 + 标点 + VAD。官方运行时是 Python WebSocket，不是 Electron 内嵌库。</p>
+
+      <div class="bars">
+        <div class="bar-row"><span>Electron</span><div class="track"><div class="fill" style="width:42%"></div></div><span class="val">Python 旁路</span></div>
+        <div class="bar-row"><span>真流式</span><div class="track"><div class="fill" style="width:90%"></div></div><span class="val">2pass WS</span></div>
+        <div class="bar-row"><span>中文热词</span><div class="track"><div class="fill" style="width:88%"></div></div><span class="val">hotwords</span></div>
+        <div class="bar-row"><span>长课时</span><div class="track"><div class="fill" style="width:80%"></div></div><span class="val">会议字幕</span></div>
+        <div class="bar-row"><span>免 key</span><div class="track"><div class="fill" style="width:100%"></div></div><span class="val">自托管</span></div>
+      </div>
+
+      <ul class="caps">
+        <li>v1.4.2 发布 2026-08-14。工具包 MIT；<strong>预训练权重另行授权</strong>，需看模型卡 / MODEL_LICENSE。</li>
+        <li>README：Streaming ✅ WebSocket（Paraformer）。Paraformer-zh-streaming：zh/en，220M 参数。</li>
+        <li>工业部署页（funasr.com，Verified 2026-08-17）：Paraformer-online / FSMN-VAD / CT-Transformer 标点；接口 WebSocket / Python / C++ / Go。</li>
+        <li>无官方 npm 推理引擎。社区 <code>funasr-client@0.1.2</code>（2025-08-09，MIT）只是连已有服务器的 TS 客户端。</li>
+        <li>sherpa-onnx 可跑部分 FunASR ONNX（SenseVoice / Paraformer），那是另一条「不装 Python」路径。</li>
+      </ul>
+
+      <table class="metrics">
+        <tr><th>最近更新</th><td>2026-08-14（PyPI 1.4.2）。</td></tr>
+        <tr><th>维护方</th><td>ModelScope / 阿里相关。主贡献者 LauraGPT 2546 次。公司+开源混合。</td></tr>
+        <tr><th>接入 / 体积</th><td>pip <code>funasr==1.4.2</code> + PyTorch。Electron 需 spawn 本地 Python 或独立 sidecar。220M 参数的磁盘体积本次<strong>未核实</strong>（只核实参数量）。</td></tr>
+        <tr><th>install 脚本</th><td>Python 包，无 npm 脚本。pip 会拉 torch，体积大。</td></tr>
+        <tr><th>许可证</th><td>代码 MIT。权重「vary」——上线前必须逐模型核对，避免把限制性权重打进 exe。</td></tr>
+        <tr><th>跑在哪</th><td>官方 Linux 工业部署。Windows Electron 捆绑 Python：可行但重，P0 不建议。</td></tr>
+        <tr><th>计费</th><td>自托管免费。云上百炼 Fun-ASR 是另一产品（本次未作主候选）。</td></tr>
+        <tr><th>文档 / TS</th><td>Python 文档强。TS 仅社区客户端。</td></tr>
+      </table>
+
+      <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">官方部署示例（FunASR realtime 页）</p>
+<pre>python -m pip install -U "funasr==1.4.2"
+cd FunASR/runtime/python/websocket
+python funasr_wss_server.py --port 10095
+python funasr_wss_client.py --host 127.0.0.1 --port 10095 --mode 2pass</pre>
+      <p class="src">来源：github.com/modelscope/FunASR · funasr.com/en/deploy/realtime.html · 抓取 2026-08-30</p>
+
+      <p class="verdict"><strong>适合 Classolo 吗？P0 不嵌进 exe，P1 可做高质量本地旁路。</strong> 中文流式工具链最完整，但运行时是 Python。若坚持纯 Electron+Node，优先 sherpa-onnx 加载 FunASR/Paraformer 的 ONNX，而不是捆绑整个 FunASR。</p>
+    </article>
+
+    <!-- ===== 价格对比（第二轮，2026-08-30） ===== -->
+    <h2 id="pricing">价格对比</h2>
+    <p class="src">第二轮（2026-08-30）：按官方定价页核实。学期用量固定为每周 10 节 × 90 分钟 × 18 周 = <strong>270 小时</strong>。美元按 Yahoo Finance USD/CNY 2026-08-30 收盘 <strong>6.7205</strong> 折人民币，表内取 6.72。学期总价按满 270 小时计，<strong>不预先扣免费额度</strong>。抓不到的数字标「未核实」，不用第三方博客冒充官网。</p>
+
+    <article class="card">
+      <h3>A. 腾讯云 vs 讯飞（真流式）</h3>
+      <p class="pos">腾讯数字来自计费概述（在线版），文档最近更新 2026-08-24。讯飞主站产品页本次仍是前端渲染、<strong>未抓到价表数字</strong>；免费额度来自讯飞文档原文；付费档位仅能引用区域授权站，且另一区域站数字不一致，故不能当主站定价。</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>腾讯云实时语音识别</strong>（扣费顺序：免费额度 → 预付费 → 后付费；后付费默认关闭）</p>
+      <ul class="caps">
+        <li>每月免费额度：实时语音识别 <strong>5 小时</strong>（当月有效）。大模型 1.0 / 2.0 实时：文档写明<strong>无</strong>免费额度。</li>
+        <li>标准实时后付费（日结，全日达到某档后<strong>全部</strong>按该档单价，不是分段）：0–299 小时/日 <strong>3.20 元/小时</strong>；300–999 → 2.80；1000–2999 → 2.20；3000–4999 → 1.60；≥5000 → 1.20。课堂一天用不了 299 小时，按 <strong>3.20</strong>。</li>
+        <li>标准实时预付费（有效期 1 年）：30 小时 / 90 元（<strong>3.00</strong>）；1,000 小时 / 1,800 元（<strong>1.80</strong>）；10,000 小时 / 15,000 元（<strong>1.50</strong>）；100,000 小时 / 120,000 元（<strong>1.20</strong>）；300,000 小时 / 300,000 元（<strong>1.00</strong>）。没有「90 小时包」这一档。</li>
+        <li>大模型 2.0 实时：后付费无梯度 <strong>1.0 元/小时</strong>；预付费 60 小时 / 60 元（<strong>1.00</strong>）；1,000 / 950（0.95）；10,000 / 9,000（0.90）。引擎是 V2 接口的 <code>16k_zh_en_2.0</code>。同一套「大模型 2.0」标签下的 <code>Hy-ASR-3.0-preview</code> <strong>仅支持 60 秒</strong>，课堂禁用。</li>
+        <li>大模型 1.0 实时后付费 0–299 小时/日 <strong>4.80 元/小时</strong>，比标准更贵，课堂不必选。</li>
+      </ul>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>腾讯云录音文件识别</strong>（批量，非上课主路径）</p>
+      <ul class="caps">
+        <li>每月免费 <strong>10 小时</strong>。</li>
+        <li>后付费月结：0–12 万小时/月 <strong>1.75 元/小时</strong>；12–30 万 → 1.40；30 万以上 → 0.95。</li>
+        <li>预付费：60 小时 / 90 元（1.50）；1,000 / 1,200（1.20）；10,000 / 10,000（1.00）；100,000 / 80,000（0.80）；300,000 / 210,000（0.70）。</li>
+        <li>大模型 2.0 录音文件后付费 <strong>0.8 元/小时</strong>；预付费 60 小时 / 48 元（0.80）。</li>
+      </ul>
+      <p class="src">来源：cloud.tencent.com/document/product/1093/35686 · 抓取 2026-08-30</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>讯飞 RTASR（实时语音转写）≠ 语音听写 IAT</strong></p>
+      <ul class="caps">
+        <li>RTASR：WebSocket 长音频流，文档写「音频流长度理论上不做限制」。课堂应对准这条。</li>
+        <li>语音听写 IAT：单次会话 <strong>60 秒</strong>，场景是输入法/语音搜索；创建应用后默认每日 500 次。把 IAT 单价拿来估 90 分钟课会错。</li>
+        <li>主站文档核实的免费额度：产品页可领免费试用；webapi 新用户礼包按认证程度最多 <strong>1 路 50 小时</strong>，有效期一年。FAQ 另写领取 1 路 <strong>24 小时 / 15 天</strong>。付费：「控制台购买时长与路数（价格可见）」——主站本次<strong>未抓到数字</strong>。</li>
+        <li>区域授权站（天津 ai-tj.cn、沈阳、芜湖）价表一致，仅作参考：免费包 24h/15 天；新用户礼包最高 50h/年；时长套餐 10h/¥99（9.90）、200h/¥1,780（8.90）、1,000h/¥6,900（6.90）、3,000h/¥14,700（4.90）；并发套餐约 1–2 万元/路/年。另一区域站 ai-sip.com 同档数字不同，故<strong>不能当官方价</strong>。</li>
+      </ul>
+      <p class="src">来源：xfyun.cn/doc/asr/rtasr/rtasr-description.html · xfyun.cn/doc/asr/voicedictation/API.html · 区域站仅作对照 · 抓取 2026-08-30</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>一学期 270 小时：腾讯 vs 讯飞</strong></p>
+      <div class="matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>方案</th>
+              <th>每小时</th>
+              <th>270 小时支出</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>腾讯标准实时 · 后付费</td>
+              <td class="num">3.20 元</td>
+              <td class="num">864 元</td>
+              <td>若学期跨 5 个自然月，免费约 25 小时，实付约 784 元</td>
+            </tr>
+            <tr>
+              <td>腾讯标准实时 · 30h 包 ×9</td>
+              <td class="num">3.00 元</td>
+              <td class="num">810 元</td>
+              <td>270 小时刚好 9 包；有效期 1 年</td>
+            </tr>
+            <tr>
+              <td>腾讯大模型 2.0 · 后付费</td>
+              <td class="num">1.00 元</td>
+              <td class="num">270 元</td>
+              <td>须走 V2 + <code>16k_zh_en_2.0</code>，无月度免费</td>
+            </tr>
+            <tr>
+              <td>腾讯大模型 2.0 · 60h 包 ×5</td>
+              <td class="num">1.00 元</td>
+              <td class="num">300 元</td>
+              <td>买 300 小时，余 30 小时</td>
+            </tr>
+            <tr>
+              <td>讯飞 RTASR · 主站套餐</td>
+              <td class="num">未核实</td>
+              <td class="num">未核实</td>
+              <td>主站无价表数字</td>
+            </tr>
+            <tr>
+              <td>讯飞 RTASR · 区域站 200h×2（参考）</td>
+              <td class="num">8.90 元</td>
+              <td class="num">3,560 元</td>
+              <td>买 400 小时才能盖住 270；折合单价仍约 8.90</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>结论：在已核实的官方数字里，腾讯标准实时一学期大约 <strong>810–864 元</strong>；若改用大模型 2.0 真流式，可降到 <strong>270–300 元</strong>。讯飞主站价未核实；按区域站参考，同样 270 小时要四位数，明显贵于腾讯。</p>
+    </article>
+
+    <article class="card">
+      <h3>B. 低成本 API：是不是真流式</h3>
+      <p class="pos">「stream: true」如果只是把<strong>整段音频识别完的文字</strong>用 SSE 吐出来，不是课堂要的边录边出 partial。下面按协议区分。</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>1. 小米 MiMo</strong></p>
+      <ul class="caps">
+        <li>开放 API：有。自家 <code>https://api.xiaomimimo.com/v1/chat/completions</code>，OpenAI 兼容；模型 ID 目前只有 <code>mimo-v2.5-asr</code>。未在 OpenRouter 目录里找到该模型。</li>
+        <li>研究仓库「MiMo-Audio」与这条计费 API <strong>不是同一条实时 ASR WebSocket</strong>。</li>
+        <li>价格（官方按量，更新 2026-08-06）：国内 <strong>¥0.5 / 音频小时</strong>；海外 $0.074 / hour。按秒统计再折小时。</li>
+        <li>输入：整段 wav/mp3 的 Base64，编码后 <strong>≤10 MB</strong>。16 kHz 16bit 单声道 wav 大约 5 分钟就顶满，90 分钟课必须切片。</li>
+        <li>文档的 <code>stream=true</code> 是<strong>识别结果 SSE</strong>，音频仍一次性上传。→ <strong>不是</strong>边采边传的真流式 ASR，只适合分段伪流式。</li>
+      </ul>
+      <p class="src">来源：mimo.mi.com/docs/en-US/price/pay-as-you-go · api/audio/Speech-Recognition · 抓取 2026-08-30</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>2. OpenRouter</strong></p>
+      <ul class="caps">
+        <li>有专用 <code>POST /api/v1/audio/transcriptions</code>：base64 或 multipart 文件进，JSON 全文出。文档参数表<strong>没有</strong> WebSocket / 音频流式 partial。上游超时约 60 秒，长录音要切段。</li>
+        <li>Chat Completions 的 <code>input_audio</code> 是音频问答，不是课堂转写接口。</li>
+        <li>本次 Models API <code>output_modalities=transcription</code> 能调到的转写模型包括：<code>openai/whisper-1</code>、<code>openai/whisper-large-v3</code>、<code>openai/whisper-large-v3-turbo</code>、<code>openai/gpt-4o-transcribe</code>、<code>openai/gpt-4o-mini-transcribe</code>、<code>openai/gpt-transcribe</code>、<code>mistralai/voxtral-mini-transcribe</code> 等 Voxtral、<code>qwen/qwen3-asr-1.7b</code> / <code>0.6b</code>、<code>nvidia/nemotron-3.5-asr-streaming-multilingual-0.6b</code>、<code>google/chirp-3</code>、<code>deepgram/nova-3</code>、<code>fish-audio/transcribe-1</code>。名称带 Streaming 的 Nemotron / Qwen3-ASR 在 OpenRouter 上仍走<strong>文件 REST</strong>。</li>
+        <li>OpenAI 官方估算（用于 token 模型折小时）：gpt-4o-transcribe 估 <strong>$0.006 / 分钟</strong>（$2.50 / $10 per 1M）；gpt-4o-mini-transcribe 估 <strong>$0.003 / 分钟</strong>。真流式是另一条 gpt-live-transcribe <strong>$0.017 / 分钟</strong>（约 $1.02 / 小时），OpenRouter STT 列表里<strong>没有</strong>这条。</li>
+      </ul>
+      <div class="matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>OpenRouter 模型</th>
+              <th>官方标价</th>
+              <th>折合每小时</th>
+              <th>270 小时（¥，汇率 6.72）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>openai/whisper-1</td>
+              <td class="num">$0.006 / 分钟</td>
+              <td class="num">$0.36 ≈ 2.42 元</td>
+              <td class="num">≈ 653 元</td>
+            </tr>
+            <tr>
+              <td>gpt-4o-mini-transcribe</td>
+              <td class="num">估 $0.003 / 分钟</td>
+              <td class="num">$0.18 ≈ 1.21 元</td>
+              <td class="num">≈ 327 元</td>
+            </tr>
+            <tr>
+              <td>gpt-4o-transcribe</td>
+              <td class="num">估 $0.006 / 分钟</td>
+              <td class="num">$0.36 ≈ 2.42 元</td>
+              <td class="num">≈ 653 元</td>
+            </tr>
+            <tr>
+              <td>qwen/qwen3-asr-1.7b</td>
+              <td class="num">$0.000008 / 秒</td>
+              <td class="num">$0.0288 ≈ 0.19 元</td>
+              <td class="num">≈ 52 元</td>
+            </tr>
+            <tr>
+              <td>nemotron-3.5-asr-streaming-0.6b</td>
+              <td class="num">$0.000003 / 秒</td>
+              <td class="num">$0.0108 ≈ 0.073 元</td>
+              <td class="num">≈ 20 元</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">来源：openrouter.ai/docs/guides/overview/multimodal/stt · 各模型页 · developers.openai.com/api/docs/pricing · 抓取 2026-08-30</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>3. 硅基流动 / Groq</strong></p>
+      <ul class="caps">
+        <li>硅基流动：<code>POST /v1/audio/transcriptions</code> 上传文件，时长 ≤1 小时、≤50 MB。文档 enum：<code>FunAudioLLM/SenseVoiceSmall</code>、<code>TeleAI/TeleSpeechASR</code>。价目表语音模型：SenseVoiceSmall、<code>Qwen/Qwen3-ASR-1.7B</code>、若干星辰 ASR 均为<strong>免费</strong>（列在「输出价格 / 千字符」栏，ASR 本身标免费）。<strong>没有</strong>官方 WebSocket 实时转写。Qwen3-ASR 是否能走同一 transcriptions 端点：文档 enum 未列入，标未核实。</li>
+        <li>免费的限额、SLA、会不会改成收费：本次<strong>未核实</strong>。不能把「永久 0 元」写进产品承诺。</li>
+        <li>Groq 官方 STT：<code>POST .../audio/transcriptions</code>，<code>whisper-large-v3-turbo</code> <strong>$0.04 / 小时</strong>（≈ 0.27 元），<code>whisper-large-v3</code> $0.111 / 小时。每请求最少计费 <strong>10 秒</strong>。文档是文件/URL，不是 WebSocket 真流式。文档写的 216× 实时速度因子是「转写有多快」，不是边说边出字。</li>
+      </ul>
+      <p class="src">来源：www.siliconflow.cn/pricing · docs.siliconflow.cn transcriptions · console.groq.com/docs/speech-to-text · 抓取 2026-08-30</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>附：国内真流式低价（本轮多查到的）</strong></p>
+      <ul class="caps">
+        <li>阿里云百炼 <code>qwen3-asr-flash-realtime</code> / <code>qwen-audio-3.0-asr-flash-streaming</code>：WebSocket，音频流进、文字流出，时长<strong>无限制</strong>。华北2（北京）<strong>0.00033 元/秒 = 1.188 元/小时</strong>；新加坡 0.00066 元/秒。后者支持热词与 Prompt 上下文。学期 270 小时 ≈ <strong>321 元</strong>。</li>
+      </ul>
+      <p class="src">来源：help.aliyun.com/zh/model-studio/qwen3-asr-flash-realtime · qwen-audio-3-0-asr-flash-streaming · asr-model · 抓取 2026-08-30</p>
+
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>4. 分段伪流式（5–10 秒切片）值不值</strong></p>
+      <ul class="caps">
+        <li>延迟：用户看到字 ≈ 切片长度 + 上传 + 推理。切片 8–10 秒时，字幕是「一句一句蹦」，不是词级 partial。Groq turbo 216× 让推理可忽略，瓶颈是你愿意等多久才切一刀。</li>
+        <li>质量：片边界会切词；课堂长句、板书术语、前后呼应的专有名词无法跨片纠错。工程上要 0.5–1 秒 overlap 再去重，仍会有缝。</li>
+        <li>成本陷阱：Groq 最短 10 秒计费。切 5 秒 = 每片按 10 秒收，小时成本翻倍（约 $0.08 / 小时）。应切 ≥10 秒。小米按实际秒数，切片不加倍，但 10 MB 限制强迫你切。</li>
+        <li>和真流式比：百炼 / 腾讯 2.0 已经在 <strong>1.0–1.19 元/小时</strong>。伪流式再省几毛到几元，换来 8–12 秒延迟和断句损失，<strong>不值得当上课主路径</strong>。只适合：手里只有文件 API key、暂时不买云 ASR 的过渡，或课后整段精转。</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <p class="badge">本轮成本建议</p>
+      <h3>学期成本总表与 ASRProvider 排序</h3>
+      <p class="pos">假设：自配 key、成本敏感、中文 45–90 分钟课。汇率 6.72。本地 sherpa 电费不计。</p>
+      <div class="matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>路线</th>
+              <th>形态</th>
+              <th>元 / 小时</th>
+              <th>学期 270h</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sherpa-onnx 本地</td>
+              <td>真流式</td>
+              <td class="num">0</td>
+              <td class="num">0</td>
+            </tr>
+            <tr>
+              <td>硅基 SenseVoice</td>
+              <td>批量 / 伪流式</td>
+              <td class="num">0（价目表免费）</td>
+              <td class="num">0*</td>
+            </tr>
+            <tr>
+              <td>OpenRouter Nemotron 文件</td>
+              <td>批量 / 伪流式</td>
+              <td class="num">≈ 0.073</td>
+              <td class="num">≈ 20 元</td>
+            </tr>
+            <tr>
+              <td>Groq whisper-large-v3-turbo</td>
+              <td>批量 / 伪流式</td>
+              <td class="num">≈ 0.27</td>
+              <td class="num">≈ 73 元</td>
+            </tr>
+            <tr>
+              <td>小米 mimo-v2.5-asr</td>
+              <td>伪流式</td>
+              <td class="num">0.50</td>
+              <td class="num">135 元</td>
+            </tr>
+            <tr>
+              <td>腾讯实时 大模型 2.0 后付费</td>
+              <td>真流式</td>
+              <td class="num">1.00</td>
+              <td class="num">270 元</td>
+            </tr>
+            <tr>
+              <td>百炼 qwen3-asr-flash-realtime（北京）</td>
+              <td>真流式 WS</td>
+              <td class="num">1.188</td>
+              <td class="num">≈ 321 元</td>
+            </tr>
+            <tr>
+              <td>OpenRouter gpt-4o-mini-transcribe</td>
+              <td>批量 / 伪流式</td>
+              <td class="num">≈ 1.21</td>
+              <td class="num">≈ 327 元</td>
+            </tr>
+            <tr>
+              <td>腾讯标准实时 资源包 3.00</td>
+              <td>真流式</td>
+              <td class="num">3.00</td>
+              <td class="num">810 元</td>
+            </tr>
+            <tr>
+              <td>腾讯标准实时 后付费</td>
+              <td>真流式</td>
+              <td class="num">3.20</td>
+              <td class="num">864 元</td>
+            </tr>
+            <tr>
+              <td>OpenRouter / OpenAI whisper-1</td>
+              <td>批量</td>
+              <td class="num">≈ 2.42</td>
+              <td class="num">≈ 653 元</td>
+            </tr>
+            <tr>
+              <td>讯飞 RTASR</td>
+              <td>真流式</td>
+              <td class="num">主站未核实</td>
+              <td class="num">区域站参考四位数</td>
+            </tr>
+            <tr>
+              <td>OpenAI gpt-live-transcribe</td>
+              <td>真流式</td>
+              <td class="num">≈ 6.85</td>
+              <td class="num">≈ 1,851 元</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="src">*硅基「免费」随时可能改价或限流，学期 0 元不能当 SLA。</p>
+
+      <p class="verdict">
+        <strong>成本敏感时的实现顺序：</strong>
+        真流式默认用<strong>百炼 Qwen 实时</strong>（1.19 元/小时、WebSocket、无时长墙、中文方言；要热词/Prompt 用 <code>qwen-audio-3.0-asr-flash-streaming</code>）。
+        已有腾讯账号且要再便宜一档：<strong>腾讯 V2 大模型 2.0</strong>（1.00 元/小时），禁止 Hy-ASR-3.0-preview。
+        医学引擎刚需仍用腾讯 <code>16k_zh_medical</code>（3.0–3.20）。
+        讯飞只作已有账号的备选。
+        伪流式只推荐一条：<strong>硅基 SenseVoice（当前免费）→ 不够再上小米 0.5 元/小时</strong>。
+        本地 sherpa-onnx 继续当免 key 兜底。
+        OpenRouter / Groq 不进默认：不是真流式，且海外延迟未核实。
+      </p>
+    </article>
+
+    <!-- ===== 通用接入层设计（第三轮，2026-08-30） ===== -->
+    <h2 id="universal-asr">通用接入层设计（第三轮）</h2>
+    <p class="src">2026-08-30 联网核实。默认云端仍是腾讯大模型 2.0 / 百炼 Qwen 真流式；本轮只回答「用户自定义端点 + 任意厂商」怎么接。卖点不超出下列页面原文。</p>
+
+    <p class="note">
+      文件式 OpenAI 兼容（<code>POST /v1/audio/transcriptions</code>）已经是网关事实标准；实时 WebSocket 没有单一事实标准。
+      课堂主路径仍走各家私有或「Realtime 方言」WS；自定义接入按<strong>协议族</strong>选 adapter，不要指望填一个 baseURL 就能自动识别。
+    </p>
+
+    <h3>协议族分类</h3>
+    <p class="pos">把市面服务收成 6 个实现族。用户自定义端点时必须显式选族；URL 路径不能当唯一依据（阶跃同时有文件 REST 与专用 ASR WS）。</p>
+    <div class="matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>协议族</th>
+            <th>传输</th>
+            <th>鉴权</th>
+            <th>音频</th>
+            <th>partial / final</th>
+            <th>本轮归属</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>openai-realtime-ws</code></td>
+            <td>WS JSON 事件</td>
+            <td>Bearer（部分要 <code>OpenAI-Beta: realtime=v1</code>）</td>
+            <td>base64 PCM，16 k 或 24 k</td>
+            <td>方言不同：增量 <code>delta</code> / 累计 <code>text</code>+<code>stash</code> / <code>.text</code></td>
+            <td>OpenAI 转写会话；阶跃 <code>/v1/realtime/asr/stream</code>；百炼 <code>qwen3-asr-flash-realtime</code>；xAI Grok（事件名有差）</td>
+          </tr>
+          <tr>
+            <td><code>openai-transcriptions-rest</code></td>
+            <td>HTTP multipart；可选 SSE</td>
+            <td>Bearer</td>
+            <td>整段文件</td>
+            <td>默认同步 <code>{text}</code>；OpenAI <code>stream=true</code> 是<strong>文件内</strong> SSE，不是边录边传</td>
+            <td>OpenAI 文件 API；阶跃 <code>/v1/audio/transcriptions</code>；Groq；硅基；OpenRouter</td>
+          </tr>
+          <tr>
+            <td><code>dashscope-task-ws</code></td>
+            <td>WS：JSON 指令 + 二进制音频</td>
+            <td>Bearer</td>
+            <td>单声道 PCM/wav 等</td>
+            <td><code>result-generated</code> 的 <code>sentence_end</code> false/true</td>
+            <td>百炼 <code>qwen-audio-3.0-asr-flash-streaming</code> / Fun-ASR-Realtime / Paraformer（<code>/api-ws/v1/inference</code>）</td>
+          </tr>
+          <tr>
+            <td><code>cloud-private-ws</code></td>
+            <td>WS；URL 参数或控制帧</td>
+            <td>HMAC / Token 头</td>
+            <td>裸 PCM 二进制</td>
+            <td>各家字段：腾讯 <code>slice_type</code> 0/1/2；讯飞 <code>type</code> 0/1；Deepgram <code>is_final</code></td>
+            <td>腾讯 ASR V2；讯飞 RTASR；Deepgram <code>/v1/listen</code></td>
+          </tr>
+          <tr>
+            <td><code>google-bidi</code></td>
+            <td>STT v2 = gRPC；Gemini Live = 私有 WS</td>
+            <td>OAuth / API key</td>
+            <td>LINEAR16 / PCM 16 k</td>
+            <td>STT：<code>is_final</code>；Live：<code>inputTranscription.text</code>（对话旁路，不是专用 ASR）</td>
+            <td>Cloud Speech-to-Text v2；Gemini Live API</td>
+          </tr>
+          <tr>
+            <td><code>local-engine</code></td>
+            <td>进程内 / IPC</td>
+            <td>无</td>
+            <td>Float32 / Int16 PCM</td>
+            <td>引擎 endpoint 规则</td>
+            <td>sherpa-onnx；whisper.cpp 分块</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="src">无法真流式的 REST 端点不单开一族，由 <code>chunked-pseudo-stream</code> 包装 <code>openai-transcriptions-rest</code>（见下方降级策略）。</p>
+
+    <h3>各家协议形态</h3>
+    <div class="matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>服务</th>
+            <th>族</th>
+            <th>端点 / 协议</th>
+            <th>像不像 OpenAI Realtime</th>
+            <th>官方文档</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>阶跃 StepAudio 2.5 ASR</td>
+            <td>Realtime 方言 + REST</td>
+            <td>WS <code>wss://api.stepfun.com/v1/realtime/asr/stream</code>；SSE <code>POST /v1/audio/asr/sse</code>；同步 <code>POST /v1/audio/transcriptions</code>；异步 <code>/v1/audio/asr/file/submit</code></td>
+            <td>事件名接近（<code>session.update</code> / <code>input_audio_buffer.append</code> / <code>….delta</code> / <code>….completed</code>）。路径不是 <code>/v1/realtime</code>。delta 的 <code>text</code> 是<strong>累计全量</strong>+<code>stash</code>，不是 OpenAI 的增量 <code>delta</code> 字段。官方迁移页<strong>未</strong>把 Audio 列入 OpenAI 兼容清单。</td>
+            <td><a href="https://platform.stepfun.com/docs/zh/api-reference/audio/asr-stream">asr-stream</a> · <a href="https://platform.stepfun.com/docs/zh/guides/models/stepaudio-2.5-asr">模型页</a></td>
+          </tr>
+          <tr>
+            <td>OpenAI 实时转写</td>
+            <td><code>openai-realtime-ws</code></td>
+            <td><code>wss://api.openai.com/v1/realtime</code>；<code>session.type=transcription</code>；模型 <code>gpt-live-transcribe</code></td>
+            <td>规范本身。PCM 24 kHz。partial=<code>….delta</code>，final=<code>….completed</code>。会话上限文档写 <strong>60 分钟</strong>。</td>
+            <td><a href="https://developers.openai.com/api/docs/guides/realtime-transcription">realtime-transcription</a> · <a href="https://developers.openai.com/api/docs/guides/realtime-websocket">websocket</a></td>
+          </tr>
+          <tr>
+            <td>OpenAI 文件转写</td>
+            <td><code>openai-transcriptions-rest</code></td>
+            <td><code>POST /v1/audio/transcriptions</code>；<code>stream=true</code> → SSE <code>transcript.text.delta</code> / <code>.done</code></td>
+            <td>无关。官方写明：文件内流式 ≠ 麦克风真流式。</td>
+            <td><a href="https://developers.openai.com/api/docs/guides/speech-to-text">speech-to-text</a></td>
+          </tr>
+          <tr>
+            <td>百炼 Qwen3 实时</td>
+            <td><code>openai-realtime-ws</code> 方言</td>
+            <td><code>wss://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/api-ws/v1/realtime?model=qwen3-asr-flash-realtime</code>；头 <code>OpenAI-Beta: realtime=v1</code></td>
+            <td>骨架像。session 偏平铺（<code>input_audio_format</code>）。增量事件是 <code>….transcription.text</code>（带 <code>stash</code>/<code>emotion</code>），<strong>不是</strong> OpenAI 的 <code>….delta</code>。另有 <code>session.finish</code>。Manual 模式文档建议单次累计音频不超过 60 秒。</td>
+            <td><a href="https://help.aliyun.com/zh/model-studio/real-time-speech-recognition-user-guide">用户指南</a> · <a href="https://help.aliyun.com/zh/model-studio/qwen-asr-realtime-interaction-process">交互流程</a></td>
+          </tr>
+          <tr>
+            <td>百炼 Qwen-Audio-3.0 / Fun-ASR</td>
+            <td><code>dashscope-task-ws</code></td>
+            <td><code>…/api-ws/v1/inference</code>；<code>run-task</code> → 二进制帧 → <code>finish-task</code></td>
+            <td>不像。</td>
+            <td><a href="https://help.aliyun.com/zh/model-studio/fun-asr-realtime-websocket-api">Fun-ASR WS</a></td>
+          </tr>
+          <tr>
+            <td>腾讯大模型 2.0</td>
+            <td><code>cloud-private-ws</code></td>
+            <td><code>wss://asr.cloud.tencent.com/asr/v2/&lt;appid&gt;?…&amp;signature=</code>；引擎 <code>16k_zh_en_2.0</code></td>
+            <td>不像。无 <code>session.update</code>；配置全在握手 URL；音频是裸 PCM。</td>
+            <td><a href="https://cloud.tencent.com/document/product/1093/131127">V2 WS</a></td>
+          </tr>
+          <tr>
+            <td>Google STT v2</td>
+            <td><code>google-bidi</code></td>
+            <td>gRPC <code>StreamingRecognize</code>，文档写明<strong>不是 REST</strong></td>
+            <td>不像。interim + <code>is_final</code>。帧建议 ~100 ms，单消息音频 ≤15 KB。OAuth。</td>
+            <td><a href="https://cloud.google.com/speech-to-text/v2/docs/reference/rpc/google.cloud.speech.v2">rpc v2</a></td>
+          </tr>
+          <tr>
+            <td>Gemini Live</td>
+            <td><code>google-bidi</code></td>
+            <td><code>wss://generativelanguage.googleapis.com/ws/…BidiGenerateContent</code></td>
+            <td>不像。转写是 Live 会话旁路（<code>inputTranscription</code>），面向语音对话。</td>
+            <td><a href="https://ai.google.dev/api/live">Live WS</a></td>
+          </tr>
+          <tr>
+            <td>Groq</td>
+            <td>REST 兼容</td>
+            <td><code>https://api.groq.com/openai/v1/audio/transcriptions</code></td>
+            <td>文件式兼容。官方 Create transcription 参数表<strong>没有</strong> <code>stream</code>，也没有 Realtime WS。最短计费 10 秒。</td>
+            <td><a href="https://console.groq.com/docs/speech-to-text">STT</a> · <a href="https://console.groq.com/docs/openai">OpenAI 兼容</a></td>
+          </tr>
+          <tr>
+            <td>硅基流动</td>
+            <td>REST 兼容</td>
+            <td><code>POST https://api.siliconflow.com/v1/audio/transcriptions</code>（国内文档为 <code>api.siliconflow.cn</code>）</td>
+            <td>文件式兼容（<code>file</code>+<code>model</code>→<code>{text}</code>）。官方 OpenAPI <strong>无</strong> WebSocket。第三方博客里的 <code>wss://…/asr/stream</code> 本次<strong>未核实</strong>。</td>
+            <td><a href="https://docs.siliconflow.com/cn/api-reference/audio/create-audio-transcriptions">transcriptions</a></td>
+          </tr>
+          <tr>
+            <td>Fireworks</td>
+            <td>—</td>
+            <td>曾有 <code>/inference/v1/audio/transcriptions</code> 与自有流式 WS</td>
+            <td>changelog：「Audio inference and image generation are deprecated。」LiteLLM #30916 称端点已 401。不作为接入目标。</td>
+            <td><a href="https://docs.fireworks.ai/updates/changelog">changelog</a></td>
+          </tr>
+          <tr>
+            <td>Deepgram</td>
+            <td><code>cloud-private-ws</code></td>
+            <td>流式 <code>wss://api.deepgram.com/v1/listen</code>（二进制+JSON）；预录制 <code>POST /v1/listen</code> 原始字节或 URL</td>
+            <td>原生不像 OpenAI。网关（LiteLLM / AIgateway）可把 REST 映射成 <code>/v1/audio/transcriptions</code>。Realtime WS 协议本身不兼容。</td>
+            <td><a href="https://developers.deepgram.com/docs/pre-recorded-audio">pre-recorded</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <article class="card" id="stepfun">
+      <h3>阶跃星辰核实结果（用户订阅，重点）</h3>
+      <p class="pos">产品线完整：实时流式、一次性 SSE、同步文件、异步文件（说话人/分轨）。课堂应对准双向 WS，不要用 SSE 当麦克风真流式。</p>
+      <ul class="caps">
+        <li>实时：<code>stepaudio-2.5-asr-stream</code>（推荐），旧 <code>step-asr-1.1-stream</code> 逐步废弃。Bearer。PCM 16 kHz / 16 bit / 单声道；<code>server_vad</code> 或客户端 <code>commit</code>。</li>
+        <li>文件 / 准实时：<code>stepaudio-2.5-asr</code>。同步路径与 OpenAI 同名：<code>POST /v1/audio/transcriptions</code>（multipart，<code>file</code>≤100MB，<code>response_format</code> 仅 json/text，另有 <code>hotwords</code> JSON 字符串）。SSE 路径 <code>/v1/audio/asr/sse</code> 是自有 JSON（base64 整段音频），事件名 <code>transcript.text.delta</code> 接近 OpenAI 文件流式，请求体不像。</li>
+        <li>对话 Realtime（<code>wss://api.stepfun.com/v1/realtime</code>，<code>stepaudio-2.5-realtime</code>）是语音对话，不是转写主路径。官方 Demo 写明对 OpenAI Realtime SDK 做了修改适配。</li>
+        <li>价格（模型页）：一次性/SSE <strong>0.15 元/小时</strong>；双向流式 <strong>1.2 元/小时</strong>。Step Plan 可直接调用。与腾讯 2.0（1.0）/ 百炼北京（1.188）同量级。</li>
+        <li>热词：SSE 有 <code>hotwords[]</code>；WS 流式用 <code>prompt</code>。流式文档未列出 hotwords 数组。</li>
+        <li>错误码有 <code>max_idle_timeout</code> / <code>pong_timeout</code>，<strong>未写秒数</strong>。append 说明写「WAV」，session.format 写 PCM——以 PCM 实现并对照当前页，标未核实。</li>
+      </ul>
+      <p style="font-size:13px;color:var(--muted);margin:16px 0 6px;">官方 WS 握手后第一条（阶跃 asr-stream）</p>
+<pre>{
+  "type": "session.update",
+  "session": {
+    "audio": {
+      "input": {
+        "format": { "type": "pcm", "codec": "pcm_s16le", "rate": 16000, "bits": 16, "channel": 1 },
+        "transcription": { "model": "stepaudio-2.5-asr-stream", "language": "zh", "prompt": "…" },
+        "turn_detection": { "type": "server_vad", "silence_duration_ms": 800 }
+      }
+    }
+  }
+}
+// 之后：input_audio_buffer.append { audio: base64 }
+// 增量：conversation.item.input_audio_transcription.delta
+//        .text = 累计全量（客户端应整体替换，不要拼接）
+//        .stash = 可能被改写的尾字</pre>
+      <p class="src">来源：platform.stepfun.com asr-stream · stepaudio-2.5-asr · audio 模型列表 · transcriptions · 抓取 2026-08-30</p>
+    </article>
+
+    <article class="card">
+      <h3>OpenAI 兼容是不是事实标准</h3>
+      <ul class="caps">
+        <li><strong>文件式：是。</strong> 已核实提供 <code>/v1/audio/transcriptions</code>（或 Groq 的 <code>/openai/v1/audio/transcriptions</code>）的：OpenAI、阶跃、Groq、硅基、OpenRouter。LiteLLM 把 Deepgram / Azure / Vertex / Gemini / Mistral 等也映射到同一路径。这是自定义「填 baseURL + key + 模型名」最省事的一档——但只适合课后或切片伪流式。</li>
+        <li><strong>实时 WS：不是。</strong> 完整兼容 OpenAI Realtime 转写事件+路径的，本轮只核实 OpenAI 自己。方言层：阶跃 ASR-stream、百炼 Qwen3、xAI Grok（<code>….updated</code> 代替 <code>….delta</code>）、自托管 Speaches / vLLM（事件子集不同）。Groq、硅基官方文档没有 Realtime WS。Deepgram 是自有 <code>/v1/listen</code>。Fireworks 音频推理已弃用。不能把「Realtime 兼容」当成填 URL 就通的标准。</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <h3>现成统一封装：引库还是自研</h3>
+      <div class="matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>库</th>
+              <th>形态</th>
+              <th>维护（本次）</th>
+              <th>覆盖</th>
+              <th>对 Classolo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Vercel AI SDK <code>transcribe</code></td>
+              <td>文件 → 全文。文档同时出现 <code>transcribe</code> 与 <code>experimental_transcribe</code></td>
+              <td>AI SDK 7.x 在线；Gateway 要求 <code>ai</code> ≥7.0.31</td>
+              <td>OpenAI / ElevenLabs / Deepgram / AssemblyAI 等<strong>文件</strong>转写。流式是 <code>experimental_streamTranscribe</code>：文档举例 <code>gpt-realtime-whisper</code>、ElevenLabs Scribe realtime、Cartesia ink-2、xAI grok-stt、Gateway 上的 Gemini transcribe-live。无腾讯 / 讯飞 / 阶跃 / 百炼 DashScope task。</td>
+              <td>可参考类型，不能当课堂接入层。</td>
+            </tr>
+            <tr>
+              <td>LiteLLM audio</td>
+              <td>Python 代理 <code>/v1/audio/transcriptions</code></td>
+              <td>文档在线。Fireworks STT 配置正被删（端点已死）</td>
+              <td>openai / azure / vertex / gemini / deepgram / groq / mistral 等文件转写。不是 Electron 真流式客户端。</td>
+              <td>仅作协议对照。</td>
+            </tr>
+            <tr>
+              <td><code>speechrouter</code> npm</td>
+              <td>SaaS 网关 SDK</td>
+              <td>0.3.1，2026-08-05；周下载 23</td>
+              <td>Deepgram / Groq / OpenAI 等海外流式。无国内云 ASR。音频要进第三方网关。</td>
+              <td>本地优先 + 自配 key：不引。</td>
+            </tr>
+            <tr>
+              <td><code>voice-router-dev</code></td>
+              <td>TS 多厂商 adapter</td>
+              <td>0.9.9，2026-08-27；周下载 222</td>
+              <td>Gladia / AssemblyAI / Deepgram / Azure / OpenAI / Speechmatics / Soniox / ElevenLabs。无腾讯/百炼/阶跃。</td>
+              <td>覆盖面偏海外会议 ASR，不覆盖用户订阅的 StepFun。</td>
+            </tr>
+            <tr>
+              <td>LiveKit agents-js STT</td>
+              <td>语音 Agent 框架内的 STT 插件</td>
+              <td>Deepgram 插件 1.7.0（2026-08-20），周下载约 7.7 万</td>
+              <td>统一 <code>STT</code> + <code>capabilities.streaming</code> + 非流式用 VAD 包一层。OpenAI 插件默认真流式 <code>gpt-realtime-whisper</code>。无国内协议族。</td>
+              <td>接口形状可抄；不要为 ASR 引入整套 LiveKit。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="verdict"><strong>判定：自研协议族 adapter。</strong> 没有一个维护良好的 npm 库同时覆盖腾讯 V2、百炼双协议、阶跃 ASR-stream 和 OpenAI 文件兼容层。AI SDK 的转写能力是文件为主、流式 experimental、厂商列表对不上课堂默认与用户订阅。</p>
+    </article>
+
+    <article class="card">
+      <p class="badge">推荐设计</p>
+      <h3>ASRProvider 接口与自定义配置面</h3>
+      <p class="pos">业务只认统一回调。每个协议族一个 adapter；Realtime 族再加 dialect（openai / stepfun-asr / qwen3-asr），因为事件字段不能当同一套解析。</p>
+<pre>type ProtocolFamily =
+  | "openai-realtime-ws"       // dialect: openai | stepfun-asr | qwen3-asr
+  | "openai-transcriptions-rest"
+  | "dashscope-task-ws"
+  | "cloud-private-ws"         // dialect: tencent-v2 | xfyun-rtasr | deepgram-listen
+  | "google-bidi"              // dialect: stt-v2-grpc | gemini-live
+  | "local-engine"
+  | "chunked-pseudo-stream";   // wraps openai-transcriptions-rest
+
+interface ASRCapabilities {
+  supportsStreaming: boolean;   // 边录边出 partial
+  supportsHotwords: boolean;
+  supportsServerVad: boolean;
+  sampleRateHz: 16000 | 24000;
+  idleTimeoutMs: number | null; // 文档没写则 null，实现按保守心跳
+  maxSessionMs: number | null;  // 如 OpenAI Realtime 60 min
+}
+
+interface ASRProvider {
+  readonly family: ProtocolFamily;
+  readonly capabilities: ASRCapabilities;
+  start(opts: ASRStartOptions): Promise&lt;void&gt;;
+  sendAudio(frame: Int16Array): void;  // 已重采样到 capabilities.sampleRateHz
+  stop(): Promise&lt;void&gt;;
+  onPartial(cb: (e: { text: string; stash?: string }) =&gt; void): void;
+  onFinal(cb: (e: { text: string }) =&gt; void): void;
+  onError(cb: (e: { code: string; message: string; retriable: boolean }) =&gt; void): void;
+}
+
+/** 设置页「自定义接入」用户必填 */
+interface CustomASRConfig {
+  family: ProtocolFamily;      // 必选，禁止从 URL 猜
+  dialect?: string;            // 同族方言
+  baseUrl: string;             // https://api.stepfun.com/v1 或完整 wss://…
+  apiKey: string;              // 只放 main，禁止进 renderer
+  model: string;               // stepaudio-2.5-asr-stream / whisper-large-v3-turbo / …
+  sampleRateHz: 16000 | 24000;
+  extraHeaders?: Record&lt;string, string&gt;; // 如 OpenAI-Beta
+  hotwords?: string[];
+}</pre>
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>自定义接入怎么选族</strong></p>
+      <ul class="caps">
+        <li>用户长期订阅阶跃 → 预置模板 <code>family=openai-realtime-ws</code> + <code>dialect=stepfun-asr</code> + <code>baseUrl=wss://api.stepfun.com/v1/realtime/asr/stream</code> + 模型 <code>stepaudio-2.5-asr-stream</code>。</li>
+        <li>只给了 OpenAI 兼容网关、没有 WS 文档 → <code>openai-transcriptions-rest</code>，课堂自动套 <code>chunked-pseudo-stream</code>。</li>
+        <li>百炼：选了 <code>qwen3-asr-flash-realtime</code> 走 Realtime 方言；选了 <code>qwen-audio-3.0-asr-flash-streaming</code> 走 DashScope task。两者不能混用同一 adapter。</li>
+        <li>腾讯 / 讯飞：走预置 <code>cloud-private-ws</code>，自定义栏只改 key/引擎名，不让用户手填签名算法。</li>
+      </ul>
+      <p style="font-size:14.5px;margin:16px 0 8px;"><strong>无法真流式时的降级</strong></p>
+      <ul class="caps">
+        <li>切片 8–10 秒；若供应商最短计费 10 秒（Groq），切片 ≥10 秒，避免 5 秒片被按 10 秒收。</li>
+        <li>片间 overlap 0.5–1 秒再去重；UI 按句刷新，不假装词级 partial。</li>
+        <li>设置页标明「准实时，延迟约一个切片」。默认上课路径仍是腾讯 2.0 / 百炼 Qwen / 阶跃 WS / sherpa。</li>
+      </ul>
+    </article>
+
+    <article class="card">
+      <h3>各协议族 adapter 工作量（风险）</h3>
+      <div class="matrix">
+        <table>
+          <thead>
+            <tr>
+              <th>Adapter</th>
+              <th>要处理的事</th>
+              <th>估时</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>openai-realtime-ws（含方言）</td>
+              <td>事件表映射（<code>delta</code> vs 累计 <code>text</code>+<code>stash</code> vs Qwen <code>.text</code>）；16k↔24k 重采样；VAD/commit；OpenAI 60 min 换会话；浏览器 WS 不能带头 → Electron main 持 key</td>
+              <td>3–5 人日（P0 先做 stepfun + qwen3 方言）</td>
+            </tr>
+            <tr>
+              <td>openai-transcriptions-rest</td>
+              <td>multipart、模型名透传、可选文件 SSE；能力探测不要假设 <code>stream=true</code>（Groq 参数表无此字段）</td>
+              <td>1–2 人日</td>
+            </tr>
+            <tr>
+              <td>chunked-pseudo-stream</td>
+              <td>切片/overlap/去重、最短计费、失败重试</td>
+              <td>2–3 人日</td>
+            </tr>
+            <tr>
+              <td>dashscope-task-ws</td>
+              <td>task_id、JSON+二进制混传、heartbeat 跳过、热词字段</td>
+              <td>3–4 人日（默认若已用 Qwen3 Realtime 可后置）</td>
+            </tr>
+            <tr>
+              <td>tencent-v2</td>
+              <td>HMAC 签名、1:1 实时率、≤6 s 送帧、slice_type</td>
+              <td>4–6 人日（默认引擎，优先做）</td>
+            </tr>
+            <tr>
+              <td>xfyun-rtasr</td>
+              <td>HMAC-SHA1、15 s 静音心跳、type 0/1</td>
+              <td>3–4 人日（有账号再做）</td>
+            </tr>
+            <tr>
+              <td>deepgram-listen</td>
+              <td>Token 头、二进制帧、KeepAlive、is_final</td>
+              <td>2–3 人日</td>
+            </tr>
+            <tr>
+              <td>google-stt-grpc</td>
+              <td>OAuth、gRPC、15 KB 帧、<code>x-goog-request-params</code></td>
+              <td>5–7 人日（P0 不做）</td>
+            </tr>
+            <tr>
+              <td>local-engine</td>
+              <td>addon ABI、热词文件、标点模型</td>
+              <td>与既有 sherpa 方案相同</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <h2>决策历史</h2>
+    <ol class="hist">
+      <li>
+        <time datetime="2026-08-30">2026-08-30</time>
+        <div>AI 初步推荐 <strong>腾讯云实时语音识别 WebSocket</strong> 作 Electron 云端主方案，<strong>sherpa-onnx-node</strong> 作免 key 兜底；讯飞 RTASR 作第二云实现。理由：医疗引擎 + 请求级热词 + 无会话总时长墙 + 2026-08 文档仍在更新，且 Web Speech 在 Electron 已被 stub 为不可用。</div>
+      </li>
+      <li>
+        <time datetime="2026-08-30">2026-08-30</time>
+        <div>用户反馈成本敏感、手持低价 API key，要求先比价再定。本轮结论：<strong>真流式默认改为百炼 Qwen 实时（约 1.19 元/小时）或腾讯大模型 2.0（1.00 元/小时）；小米 / OpenRouter / Groq / 硅基都不是边录边传的真流式，只适合切片伪流式，课堂主路径不值。</strong></div>
+      </li>
+      <li>
+        <time datetime="2026-08-30">2026-08-30</time>
+        <div>用户拍板默认腾讯 2.0 / 百炼 Qwen，并要求通用自定义接入（含长期订阅的阶跃星辰）。本轮结论：<strong>按协议族做 adapter（Realtime 方言 / 文件 REST / DashScope task / 云厂商私有 WS / Google 双通道 / 本地引擎）；文件式 OpenAI 兼容是事实标准，实时 WS 不是；不引 AI SDK / speechrouter / LiveKit 当接入层，自研薄 adapter；阶跃课堂走 <code>stepaudio-2.5-asr-stream</code>（1.2 元/小时）。</strong></div>
+      </li>
+    </ol>
+
+    <footer class="notes">
+      <h2>来源与抓取日期</h2>
+      <p>全部为 2026-08-30 本次抓取。卖点不超出下列页面原文。</p>
+      <ol>
+        <li>MDN SpeechRecognition — https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition</li>
+        <li>MDN processLocally — https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/processLocally</li>
+        <li>Electron 环境变量 GOOGLE_API_KEY（仅 geolocation）— https://www.electronjs.org/docs/latest/api/environment-variables</li>
+        <li>Electron issues #31732、#46143、#47837 — SpeechRecognition network error</li>
+        <li>Electron PR #52955（2026-08-19 merged）— OnDeviceSpeechRecognition stub kUnavailable</li>
+        <li>Chrome 139 On-device Web Speech — https://developer.chrome.com/blog/new-in-chrome-139</li>
+        <li>讯飞 RTASR — https://www.xfyun.cn/doc/asr/rtasr/API.html</li>
+        <li>讯飞热词说明 — https://www.xfyun.cn/doc/asr/rtasr/rtasr-description.html</li>
+        <li>讯飞大模型 RTASR（8 小时 / 15 秒）— https://www.xfyun.cn/doc/spark/asr_llm/rtasr_llm.html</li>
+        <li>讯飞听写 IAT 60 s — https://www.xfyun.cn/doc/asr/voicedictation/API.html</li>
+        <li>腾讯云实时 ASR WS — https://cloud.tencent.com/document/product/1093/48982 （2026-08-04）</li>
+        <li>腾讯云计费 — https://cloud.tencent.com/document/product/1093/35686 （2026-08-24）</li>
+        <li>腾讯云 FAQ 无最长识别时间 — https://cloud.tencent.com/document/product/1093/35802</li>
+        <li>腾讯云 JS SDK 仓库提交 2026-07-27 — https://github.com/TencentCloud/tencentcloud-speech-sdk-js</li>
+        <li>npm tencentcloud-speech-sdk-js@1.0.0 2022-05-07 — https://registry.npmjs.org/tencentcloud-speech-sdk-js</li>
+        <li>阿里云实时接口 — https://help.aliyun.com/zh/isi/developer-reference/api-reference</li>
+        <li>阿里云计费 — https://help.aliyun.com/zh/isi/product-overview/billing-10</li>
+        <li>阿里云 FAQ 不限制时长 — https://help.aliyun.com/zh/isi/support/faq-about-speech-recognition</li>
+        <li>npm alibabacloud-nls@1.0.4 2023-10-13</li>
+        <li>OpenAI Realtime transcription — https://developers.openai.com/api/docs/guides/realtime-transcription</li>
+        <li>OpenAI Pricing — https://developers.openai.com/api/docs/pricing</li>
+        <li>npm openai@7.8.0 2026-08-27</li>
+        <li>Deepgram 定价与语言（未入围展开）— https://deepgram.com/pricing · developers.deepgram.com</li>
+        <li>sherpa-onnx 仓库 / npm 1.13.6 2026-08-18 · 流式 JS 文档</li>
+        <li>zipformer 模型体积 — k2-fsa sherpa zipformer-transducer-models.rst</li>
+        <li>whisper.cpp README 体积、v1.9.3、addon.node、stream.wasm</li>
+        <li>FunASR v1.4.2 2026-08-14 · funasr.com/en/deploy/realtime.html</li>
+        <li>npm：@deepgram/sdk@5.9.0、xfyun-sdk@1.5.1、nodejs-whisper@0.3.1、sherpa-onnx-win-x64 unpackedSize</li>
+        <li>腾讯云计费概述（在线版）2026-08-24 — https://cloud.tencent.com/document/product/1093/35686</li>
+        <li>腾讯云实时 ASR V2（16k_zh_en_2.0）— https://cloud.tencent.com/document/product/1093/131127</li>
+        <li>讯飞 RTASR 服务说明（免费额度）— https://www.xfyun.cn/doc/asr/rtasr/rtasr-description.html</li>
+        <li>讯飞语音听写 IAT（60 s，勿与 RTASR 混价）— https://www.xfyun.cn/doc/asr/voicedictation/API.html</li>
+        <li>讯飞区域授权站 RTASR 价表（非主站）— https://www.ai-tj.cn/service/rtasr</li>
+        <li>小米 MiMo ASR 定价与 API — https://mimo.mi.com/docs/en-US/price/pay-as-you-go · https://mimo.mi.com/docs/en-US/api/audio/Speech-Recognition</li>
+        <li>OpenRouter STT — https://openrouter.ai/docs/guides/overview/multimodal/stt · /api/v1/models?output_modalities=transcription</li>
+        <li>OpenAI Pricing（含 gpt-4o-transcribe 估算与 gpt-live-transcribe）— https://developers.openai.com/api/docs/pricing</li>
+        <li>硅基流动价目 — https://www.siliconflow.cn/pricing</li>
+        <li>硅基流动 transcriptions API — https://docs.siliconflow.cn/cn/api-reference/audio/create-audio-transcriptions</li>
+        <li>Groq Speech to Text — https://console.groq.com/docs/speech-to-text</li>
+        <li>阿里云百炼 Qwen 实时 ASR 定价 — https://help.aliyun.com/zh/model-studio/qwen3-asr-flash-realtime · qwen-audio-3-0-asr-flash-streaming</li>
+        <li>汇率 USD/CNY Yahoo Finance 2026-08-30 close 6.7205</li>
+        <li>阶跃 StepAudio 2.5 ASR — https://platform.stepfun.com/docs/zh/guides/models/stepaudio-2.5-asr</li>
+        <li>阶跃双向流式 ASR — https://platform.stepfun.com/docs/zh/api-reference/audio/asr-stream</li>
+        <li>阶跃 SSE ASR — https://platform.stepfun.com/docs/zh/api-reference/audio/asr-sse</li>
+        <li>阶跃 /v1/audio/transcriptions — https://platform.stepfun.com/docs/zh/api-reference/audio/transcriptions</li>
+        <li>阶跃 OpenAI 迁移兼容清单（未列 Audio）— https://platform.stepfun.com/docs/zh/guides/developer/openai</li>
+        <li>阶跃语音模型列表 — https://platform.stepfun.com/docs/zh/guides/models/audio</li>
+        <li>OpenAI Realtime transcription — https://developers.openai.com/api/docs/guides/realtime-transcription</li>
+        <li>OpenAI Realtime WebSocket — https://developers.openai.com/api/docs/guides/realtime-websocket</li>
+        <li>OpenAI 文件转写（含 stream=true 语义）— https://developers.openai.com/api/docs/guides/speech-to-text</li>
+        <li>OpenAI Realtime 会话 60 分钟 — https://developers.openai.com/api/docs/guides/realtime-conversations</li>
+        <li>Gemini Live WS — https://ai.google.dev/api/live</li>
+        <li>Google STT v2 StreamingRecognize（gRPC / is_final）— https://cloud.google.com/speech-to-text/v2/docs/reference/rpc/google.cloud.speech.v2</li>
+        <li>腾讯实时 ASR V2 — https://cloud.tencent.com/document/product/1093/131127</li>
+        <li>百炼实时识别用户指南（Qwen3 Realtime 方言）— https://help.aliyun.com/zh/model-studio/real-time-speech-recognition-user-guide</li>
+        <li>百炼 Qwen3 交互流程 — https://help.aliyun.com/zh/model-studio/qwen-asr-realtime-interaction-process</li>
+        <li>百炼 Fun-ASR / Qwen-Audio-3.0 WS（run-task）— https://help.aliyun.com/zh/model-studio/fun-asr-realtime-websocket-api</li>
+        <li>Groq STT / OpenAI 兼容 — https://console.groq.com/docs/speech-to-text · https://console.groq.com/docs/openai · https://console.groq.com/docs/api-reference</li>
+        <li>硅基 transcriptions — https://docs.siliconflow.com/cn/api-reference/audio/create-audio-transcriptions</li>
+        <li>Fireworks changelog（audio inference deprecated）— https://docs.fireworks.ai/updates/changelog</li>
+        <li>Deepgram 预录制 REST — https://developers.deepgram.com/docs/pre-recorded-audio</li>
+        <li>AI SDK transcribe / experimental_streamTranscribe — https://ai-sdk.dev/docs/ai-sdk-core/transcription · https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-transcribe · https://vercel.com/docs/ai-gateway/modalities/speech-to-text</li>
+        <li>LiteLLM /audio/transcriptions — https://docs.litellm.ai/docs/audio_transcription</li>
+        <li>npm speechrouter@0.3.1 2026-08-05 · voice-router-dev@0.9.9 2026-08-27 · @livekit/agents-plugin-deepgram@1.7.0 2026-08-20</li>
+        <li>LiveKit OpenAI STT（gpt-realtime-whisper）— https://docs.livekit.io/agents/models/stt/openai/</li>
+      </ol>
+      <p>未核实项汇总：讯飞主站价表与标准版单次总时长；三家云中文 WER；OpenAI 90 分钟稳定性与国内可达性；sherpa 90 分钟内存；FunASR 220M 参数对应磁盘体积；Chrome 设备端中文在零售 Chrome 的课堂可用性（与 Electron 无关）；硅基「免费」ASR 的限额 / SLA / 是否会改价；硅基 Qwen3-ASR 是否可走 transcriptions 端点；OpenRouter 各模型实际 token→小时（除官方已给估算的 gpt-4o 系外，以 usage.cost 为准）；Groq / OpenRouter 国内课堂延迟；阶跃空闲/心跳超时秒数；阶跃 append 文档「WAV」与 session「PCM」何者生效；用 OpenAI SDK 调阶跃 <code>/v1/audio/transcriptions</code> 是否开箱即用（迁移页未列 Audio）；硅基官方是否存在实时 WS（第三方博客未采信）；Fireworks 弃用精确日期（changelog 无日期，LiteLLM #30916 称 2026-06-10）；全球提供 OpenAI 兼容 transcriptions / Realtime WS 的厂商穷尽计数（本轮只核实样本）；Qwen3 Realtime 45–90 分钟课稳定性（文档仅提示 Manual 模式累计音频建议不超过 60 秒）；AI SDK 文档中 <code>transcribe</code> 与 <code>experimental_transcribe</code> 并存，稳定去 experimental 前缀的版本未单独核对。</p>
+    </footer>
+  </div>
+</body>
+</html>
