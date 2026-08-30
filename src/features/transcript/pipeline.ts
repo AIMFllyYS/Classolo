@@ -88,6 +88,7 @@ export async function startSession(): Promise<void> {
   }
 
   const asr = createASRProvider(readAsrRuntimeConfig())
+  patchTranscriptPrivate({ streaming: asr.capabilities.streaming })
   asr.onPartial((segment) => {
     patchTranscriptPrivate({ partial: segment.text })
   })

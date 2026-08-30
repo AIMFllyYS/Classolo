@@ -29,6 +29,10 @@ export function TranscriptPane() {
     transcriptPrivateStore,
     (state) => state.connection,
   )
+  const streaming = useStore(
+    transcriptPrivateStore,
+    (state) => state.streaming,
+  )
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -73,6 +77,12 @@ export function TranscriptPane() {
         电平 {Math.round(level * 100)}%
         <span className="mx-2">·</span>
         连接 {connection}
+        {streaming === 'pseudo' ? (
+          <>
+            <span className="mx-2">·</span>
+            <span data-slot="asr-latency">准实时</span>
+          </>
+        ) : null}
       </p>
       {error ? (
         <p className="text-destructive" data-slot="capture-error">

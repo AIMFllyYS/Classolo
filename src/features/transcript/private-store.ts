@@ -9,6 +9,7 @@ export interface TranscriptPrivateState {
   partial: string
   highlightId: string | null
   connection: 'idle' | 'live' | 'reconnecting'
+  streaming: 'realtime' | 'pseudo' | 'none' | null
 }
 
 const initialState: TranscriptPrivateState = {
@@ -18,6 +19,7 @@ const initialState: TranscriptPrivateState = {
   partial: '',
   highlightId: null,
   connection: 'idle',
+  streaming: null,
 }
 
 export const transcriptPrivateStore = createStore<TranscriptPrivateState>(

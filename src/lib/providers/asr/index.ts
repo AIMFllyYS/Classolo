@@ -9,6 +9,7 @@ import { getCustomHotwords, mergeHotwords } from './custom-hotwords'
 import { getSelectedHotwordPackId, resolveHotwordPack } from './hotword-packs'
 import type { ASRConfig, ASRProvider } from './types'
 import { StepfunRealtimeWsProvider } from './realtime-ws/stepfun'
+import { OpenAiCompatibleTranscriptionsProvider } from './transcriptions-rest/openai-compatible'
 
 export type {
   ASRCapabilities,
@@ -61,6 +62,11 @@ export function createASRProvider(config: ASRConfig): ASRProvider {
     case 'realtime-ws':
       if (config.dialect === 'stepfun') {
         return new StepfunRealtimeWsProvider(withHotwordPack(config))
+      }
+      throw new Error(`ASR dialect not implemented yet: ${config.dialect}`)
+    case 'transcriptions-rest':
+      if (config.dialect === 'openai-compatible') {
+        return new OpenAiCompatibleTranscriptionsProvider(withHotwordPack(config))
       }
       throw new Error(`ASR dialect not implemented yet: ${config.dialect}`)
     default:
