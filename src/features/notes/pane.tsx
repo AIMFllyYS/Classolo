@@ -5,6 +5,7 @@ import { useEffect, useMemo } from 'react'
 import { ClassroomMindmap } from '@/components/mindmap'
 import { useNotesPublic } from '@/lib/session'
 
+import { publishOutlineJump } from './jump'
 import { startOutlineOrganizer } from './organizer'
 
 export function NotesPane() {
@@ -23,7 +24,7 @@ export function NotesPane() {
         <p className="text-muted-foreground">尚无大纲节点。</p>
       ) : (
         <div className="min-h-64 flex-1 overflow-hidden rounded-lg border border-border">
-          <ClassroomMindmap nodes={tree} />
+          <ClassroomMindmap nodes={tree} onNodeClick={publishOutlineJump} />
         </div>
       )}
     </div>
