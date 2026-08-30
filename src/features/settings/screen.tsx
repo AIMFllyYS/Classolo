@@ -9,6 +9,8 @@ import {
 
 import { AiSettingsForm } from './ai-form'
 import { AsrSettingsForm } from './asr-form'
+import { HotwordsSettingsForm } from './hotwords-form'
+import { ThemeSettingsForm } from './theme-form'
 
 export function SettingsScreen() {
   return (
@@ -25,14 +27,11 @@ export function SettingsScreen() {
       <TabsContent value="asr" className="mt-4">
         <AsrSettingsForm />
       </TabsContent>
-      <TabsContent
-        value="hotwords"
-        className="mt-4 text-sm text-muted-foreground"
-      >
-        热词自定义将在后续设置卡落地。
+      <TabsContent value="hotwords" className="mt-4">
+        <HotwordsSettingsForm />
       </TabsContent>
-      <TabsContent value="theme" className="mt-4 text-sm text-muted-foreground">
-        主题默认跟随系统；强制切换将在后续设置卡落地。
+      <TabsContent value="theme" className="mt-4">
+        <ThemeSettingsForm />
       </TabsContent>
     </Tabs>
   )

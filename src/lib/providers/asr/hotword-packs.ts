@@ -32,9 +32,49 @@ export const HOTWORD_PACKS: readonly HotwordPack[] = [
   },
 ]
 
-const DEFAULT_PACK_ID = 'physics'
+export const DEFAULT_HOTWORD_PACK_ID = 'physics'
+const PACK_STORAGE_KEY = 'classolo-asr-hotword-pack'
 
-let selectedPackId: string = DEFAULT_PACK_ID
+let selectedPackId: string = DEFAULT_HOTWORD_PACK_ID
+let packHydrated = false
+const packListeners = new Set<() => void>()
+
+function emitPack(): void {
+  for (const listener of [...packListeners]) listener()
+}
+
+export function subscribeHotwordPack(listener: () => void): () => void {
+  packListeners.add(listener)
+  return () => {
+    packListeners.delete(listener)
+  }
+}
+
+function isKnownPackId(id: string): boolean {
+  return HOTWORD_PACKS.some((item) => item.id === id)
+}
+
+function persistPack(id: string): void {
+  selectedPackId = id
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.setItem(PACK_STORAGE_KEY, id)
+  } catch {
+    // private-mode / quota: keep memory only
+  }
+}
+
+function hydratePack(): void {
+  if (packHydrated) return
+  packHydrated = true
+  if (typeof localStorage === 'undefined') return
+  try {
+    const raw = localStorage.getItem(PACK_STORAGE_KEY)
+    if (raw && isKnownPackId(raw)) selectedPackId = raw
+  } catch {
+    selectedPackId = DEFAULT_HOTWORD_PACK_ID
+  }
+}
 
 export function listHotwordPacks(): readonly HotwordPack[] {
   return HOTWORD_PACKS
@@ -45,19 +85,32 @@ export function selectHotwordPack(id: string): void {
   if (!pack) {
     throw new Error(`未知热词包：${id}`)
   }
-  selectedPackId = pack.id
+  packHydrated = true
+  persistPack(pack.id)
+  emitPack()
 }
 
 export function getSelectedHotwordPackId(): string {
+  hydratePack()
   return selectedPackId
 }
 
-export function resolveHotwordPack(id: string = selectedPackId): readonly string[] {
+export function resolveHotwordPack(
+  id: string = getSelectedHotwordPackId(),
+): readonly string[] {
   const pack = HOTWORD_PACKS.find((item) => item.id === id)
   if (!pack) return HOTWORD_PACKS[0]?.terms ?? []
   return pack.terms
 }
 
 export function resetHotwordPackSelection(): void {
-  selectedPackId = DEFAULT_PACK_ID
+  packHydrated = true
+  selectedPackId = DEFAULT_HOTWORD_PACK_ID
+  emitPack()
+  if (typeof localStorage === 'undefined') return
+  try {
+    localStorage.removeItem(PACK_STORAGE_KEY)
+  } catch {
+    // ignore
+  }
 }

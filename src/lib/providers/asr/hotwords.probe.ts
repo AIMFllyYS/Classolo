@@ -3,6 +3,7 @@ import { clearAllUserSecretOverrides } from '@/lib/providers/secrets'
 import {
   createASRProvider,
   hotwordsForStart,
+  resetCustomHotwords,
   resetHotwordPackSelection,
   resolveHotwordPack,
   selectHotwordPack,
@@ -70,6 +71,7 @@ class UnsupportedHotwordProvider implements ASRProvider {
 
 export async function readHotwordPackInjectsOnStart(): Promise<string> {
   clearAllUserSecretOverrides()
+  resetCustomHotwords()
   resetHotwordPackSelection()
   selectHotwordPack('physics')
   const terms = resolveHotwordPack()
