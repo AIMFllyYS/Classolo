@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/tabs'
 
 import { AiSettingsForm } from './ai-form'
+import { AsrSettingsForm } from './asr-form'
 
 export function SettingsScreen() {
   return (
@@ -21,8 +22,8 @@ export function SettingsScreen() {
       <TabsContent value="ai" className="mt-4">
         <AiSettingsForm />
       </TabsContent>
-      <TabsContent value="asr" className="mt-4 text-sm text-muted-foreground">
-        ASR 协议族与 dialect 表单将在后续设置卡落地。
+      <TabsContent value="asr" className="mt-4">
+        <AsrSettingsForm />
       </TabsContent>
       <TabsContent
         value="hotwords"
