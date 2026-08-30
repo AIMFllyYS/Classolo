@@ -34,6 +34,17 @@ function defaultReadTexts(): string[] {
   return getTranscriptPublic().committed.map((segment) => segment.text)
 }
 
+async function outlineFromTranscript(
+  texts: string[],
+): Promise<readonly OutlineDigestNode[]> {
+  const titled = await modelOutline(texts)
+  const committed = getTranscriptPublic().committed
+  return titled.map((node, index) => ({
+    id: committed[index]?.id ?? node.id,
+    title: node.title,
+  }))
+}
+
 function defaultSubscribeCommitted(onCommitted: () => void): () => void {
   return subscribeTranscriptPublic(
     (state) => state.committedVersion,
@@ -113,7 +124,7 @@ export function startOutlineOrganizer(
 ): () => void {
   stopCurrent?.()
 
-  const generate = options.generate ?? modelOutline
+  const generate = options.generate ?? outlineFromTranscript
   const debounceMs = options.debounceMs ?? OUTLINE_DEBOUNCE_MS
   const readTexts = options.readTexts ?? defaultReadTexts
   const subscribeCommitted =
