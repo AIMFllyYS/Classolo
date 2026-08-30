@@ -45,35 +45,31 @@
 - 构建连续失败 3 次 → 停下报告完整错误输出
 - 依赖缺失 → 先查 `package.json` 与 `docs/libraries.md`，再问
 - 合并冲突 → 停下展示冲突文件
-- **Never**: 删除 lock 文件、force push、跳过测试、绕过 lint
+- **Never**: 删除 lock 文件、force push、绕过 lint / typecheck
 
 ## Project Structure
 
 ```
-src/app/         路由层（只放路由文件，业务逻辑下沉到 src/features/）
-src/components/  纯 UI 组件 + 第三方库封装层（<domain>/ 子目录是对应库的唯一入口）
-src/features/    业务领域模块（transcript/ notes/ render-modules/ agent/ review/ quiz/ settings/）
-src/lib/         工具函数、通用 hooks、providers/（可插拔 Provider 接口）、ai/、db/
-src/server/      server-only 代码
-src/styles/      设计令牌与全局样式（StudySolo 体系）
+src/app/         路由层（只放路由表内的静态页，见 conventions/routing.md）
+src/components/  纯 UI + 第三方库封装层
+src/features/    transcript / notes / render-modules / agent / settings / playbook / …
+src/lib/         providers/（含 secrets）/ session/ / ai/ / db/ / theme/
+src/styles/      设计令牌（StudySolo）
 ```
 
-> 完整目录规则与文件放置决策见 [docs/conventions/](docs/conventions/)。
+> 不要往 `src/app/api` 加 HTTP 接口。目录树见 [project-structure.md](docs/conventions/project-structure.md)。
 
 ## Critical Rules（省略了就会犯错）
 
-- **`proxy.ts` not `middleware.ts`** — 后者已废弃（详见 [nextjs-16-patterns.md](docs/conventions/nextjs-16-patterns.md)）
-- **`params`/`searchParams`/`cookies()`/`headers()` 必须 `await`** — Next.js 16 强制异步
-- **默认 Server Component，`'use client'` 放叶子组件** — 不放页面级
-- **`_dev/` 单向引用 + production 守卫** — 每页顶部 `if (process.env.NODE_ENV === 'production') notFound()`；正式代码不得引用 `_dev/`
-- **TypeScript strict，禁止 `any`** — 用 `unknown` + 类型收窄
-- **禁止使用 `middleware.ts` / Pages Router（`pages/` 目录）**
-- **`next.config.ts` 保持 `output: 'export'` 三件套** — Electron 桌面包依赖静态导出；**禁止新增动态 Route Handler / Server Action**，系统能力走 Electron main + IPC
-- **Dev 端口固定 4070** — 1037Solo 生态为 Classolo 预留，不要改
-- **本地优先 + 可插拔红线** — Auth/Storage/Mail/AI/ASR 一律走 `src/lib/providers/` 接口，业务代码禁止绕过接口直连具体实现；P0 不接生态数据库/邮件/登录
-- **渲染模块互不耦合** — `src/features/render-modules/` 各模块禁止横向 import，只依赖协议 types（详见 [render-module-protocol.md](docs/designs/render-module-protocol.md)）
-- **色系只用 StudySolo 令牌** — `src/styles/tokens.css` 的语义变量（`--primary` 等），禁止硬编码品牌色、禁止另起色板
-- **禁止一切腾讯云 EdgeOne 相关配置** — 本项目不用 EdgeOne；生态 Web 版走宝塔自部署（很晚才做）
+- **禁止 `middleware.ts` / `pages/` / 动态 `route.ts` / Server Action / 开放 `[id]` 路由** — 只允许 [routing.md](docs/conventions/routing.md) 里的静态路径；P0 不要创建 `proxy.ts`
+- **`params` / `searchParams` 若出现必须 `await`** — 不要为用这些 API 去造动态路由
+- **默认 Server Component，`'use client'` 放叶子**；**TypeScript strict，禁止 `any`**
+- **`_dev/` 单向引用 + production `notFound()`**；共享动效/预设只进 `/playbook/` 与 `features/playbook/registry.ts`
+- **`next.config.ts` 保持 `output: 'export'` 三件套**；Dev 端口 **4070**；系统能力走 Electron main + IPC
+- **本地优先 + Provider 红线** — Auth/Storage/Mail/AI/ASR/密钥只走 `src/lib/providers/`；密钥优先级见 [secrets-resolution.md](docs/specs/secrets-resolution.md)
+- **features 禁止横向 import** — 跨域只经 `src/lib/session/`（ADR-0017）；渲染模块只依赖协议 types
+- **色系只用 StudySolo 令牌**；默认主题跟随系统（ADR-0014）
+- **禁止 EdgeOne / Vercel 云部署专属配置**；表结构走 [local-schema.md](docs/specs/local-schema.md)（软约束，改表先改 spec）
 
 ## 自进化机制（常驻规则）
 
@@ -83,7 +79,9 @@ src/styles/      设计令牌与全局样式（StudySolo 体系）
 
 ## Git Workflow
 
-- 从 `main` 切出，前缀 `feat/`、`fix/`、`chore/`；squash merge；PR 过 CI + 至少一次审查
+- **`main`** 稳定可发布；**`dev`** 集成；功能分支从 `dev` 拉，PR 回 `dev`；发版 PR `dev` → `main`
+- 前缀 `feat/`、`fix/`、`chore/`；squash merge；CI（lint + tsc）必须绿
+- 详情 [git-github.md](docs/conventions/git-github.md)
 
 ### Issue 与 PR 协作（强制查表）
 
@@ -112,13 +110,18 @@ src/styles/      设计令牌与全局样式（StudySolo 体系）
 |---|---|
 | 引入/变更任何依赖前 | [docs/libraries.md](docs/libraries.md) |
 | 使用某第三方库写代码前 | `docs/lessons/<该库>.md`（存在则读） |
-| 创建 issue / PR 前 | [docs/skills-registry.md](docs/skills-registry.md) |
+| 创建 issue / PR 前 | [docs/skills-registry.md](docs/skills-registry.md) + [git-github.md](docs/conventions/git-github.md) |
 | 疑惑"当初为什么这么选"时 | `docs/adr/` 对应编号（0001 为项目范围） |
-| 动布局/分区/Provider/迁移相关设计前 | [docs/designs/architecture-overview.md](docs/designs/architecture-overview.md) |
-| 新增/修改渲染区模块前 | [docs/designs/render-module-protocol.md](docs/designs/render-module-protocol.md) |
-| 做 ASR 接入/适配器前 | [docs/adr/0004-asr-universal-access.md](docs/adr/0004-asr-universal-access.md) + `docs/designs/library-showcase/asr.html` |
-| 规划迭代/确认功能范围时 | [docs/plans/roadmap-p0-p1-p2.md](docs/plans/roadmap-p0-p1-p2.md) |
-| 设计题目/复习数据结构前 | [docs/specs/question-schema.md](docs/specs/question-schema.md) |
-| 写长文件/纠结文件放哪时 | [docs/conventions/code-size-and-organization.md](docs/conventions/code-size-and-organization.md) |
-| Code review 时 | [docs/conventions/code-review.md](docs/conventions/code-review.md) |
-| 写 Next.js 路由/组件遇到框架行为疑问时 | [docs/conventions/nextjs-16-patterns.md](docs/conventions/nextjs-16-patterns.md) |
+| 动布局/分区/Provider/迁移相关设计前 | [architecture-overview.md](docs/designs/architecture-overview.md) |
+| 新增/修改渲染区模块前 | [render-module-protocol.md](docs/designs/render-module-protocol.md) |
+| 做 ASR 接入/适配器前 | [ADR-0004](docs/adr/0004-asr-universal-access.md) + `docs/designs/library-showcase/asr.html` |
+| 跨 feature 通信 / 以为需要 event bus / 点节点回跳 / feature 直接碰 IPC 前 | [feature-communication.md](docs/designs/feature-communication.md) + [ADR-0017](docs/adr/0017-feature-communication.md) |
+| 建表/加列/决定落不落库前 | [local-schema.md](docs/specs/local-schema.md)（软约束） |
+| 读/写 API 密钥前 | [secrets-resolution.md](docs/specs/secrets-resolution.md) |
+| 新增页面 / 动效 / 预设组件前 | [routing.md](docs/conventions/routing.md) |
+| 规划迭代/确认功能范围时 | [roadmap-p0-p1-p2.md](docs/plans/roadmap-p0-p1-p2.md) |
+| 设计题目/复习数据结构前 | [question-schema.md](docs/specs/question-schema.md) |
+| 写长文件/纠结文件放哪时 | [code-size-and-organization.md](docs/conventions/code-size-and-organization.md) + [project-structure.md](docs/conventions/project-structure.md) |
+| 写组件/样式/封装层/测试口径时 | [code-style.md](docs/conventions/code-style.md) |
+| Code review 时 | [code-review.md](docs/conventions/code-review.md) |
+| 写 Next.js 路由/`next.config`/以为需要 middleware 时 | [nextjs-16-patterns.md](docs/conventions/nextjs-16-patterns.md) |

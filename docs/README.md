@@ -9,7 +9,7 @@
 | [`plans/`](./plans/) | 项目计划、路线图、里程碑 |
 | [`conventions/`](./conventions/) | 项目规范、编码约定、架构规范 |
 | [`updates/`](./updates/) | 更新日志、变更记录、版本说明 |
-| [`specs/`](./specs/) | 技术规格说明（功能规格、API 规格、AI harness 规格） |
+| [`specs/`](./specs/) | 技术规格（本地 schema、密钥解析、题目结构；无 HTTP API） |
 | [`audits/`](./audits/) | 审计报告（性能审计、安全审计、代码审计） |
 | [`ops/`](./ops/) | 运维与操作指南（本地运行教程、部署教程、环境配置） |
 | [`issues/`](./issues/) | 问题追踪与记录（已知问题、bug 记录、技术债务） |
@@ -17,7 +17,7 @@
 | [`adr/`](./adr/) | 架构决策记录（只增不改，0001 为项目范围） |
 | [`lessons/`](./lessons/) | 踩坑经验库（一库一文件，用前必读） |
 
-根级文件：[`libraries.md`](./libraries.md)（组件库注册表，依赖引入唯一裁判）、[`skills-registry.md`](./skills-registry.md)（skills 绑定表）。
+根级文件：[`libraries.md`](./libraries.md)（组件库注册表）、[`skills-registry.md`](./skills-registry.md)（skills 绑定）。路由封闭表见 [`conventions/routing.md`](./conventions/routing.md)。
 
 ## 文档规范
 

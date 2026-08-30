@@ -4,21 +4,22 @@
 
 ## 用途
 
-存放项目内部的规范文档，包括：
-- 编码规范（TypeScript、React、CSS 命名等）
-- 架构规范（目录结构、模块划分、依赖方向）
-- Git 规范（分支策略、Commit 消息格式）
-- API 设计规范
-- 文档编写规范
+给 **AI 与人类同一套口径**。`AGENTS.md` 只保留硬规则 + 触发条件；满足触发条件时必须先读本目录对应文档，再动手。
+
+本目录**不**另写 HTTP API 规范（P0 无 HTTP API）。Git 规范见 [git-github.md](./git-github.md)。
 
 ## 现有文档
 
-- [code-size-and-organization.md](./code-size-and-organization.md) — 代码长度与文件组织规范（长度阈值、colocation 放置原则、拆分判断方法）
-- [project-structure.md](./project-structure.md) — 完整目录结构与分层规则
-- [nextjs-16-patterns.md](./nextjs-16-patterns.md) — Next.js 16.2+ 关键模式与陷阱（proxy.ts、async APIs、Turbopack、SSG 配置等）
-- [code-style.md](./code-style.md) — 代码风格规范（Server Component、use client、TypeScript、Tailwind、_dev/ 规则）
-- [code-review.md](./code-review.md) — Code review 检查清单
+| 文档 | 何时读 |
+|---|---|
+| [routing.md](./routing.md) | 新增页面、动效、预设组件 |
+| [git-github.md](./git-github.md) | 分支、PR、CI |
+| [project-structure.md](./project-structure.md) | 新建目录、纠结文件放哪、想加 `api/` 或 Server Action 时 |
+| [code-size-and-organization.md](./code-size-and-organization.md) | 写长文件、要不要提升到 `features/` |
+| [nextjs-16-patterns.md](./nextjs-16-patterns.md) | 写路由 / `next.config` / 以为需要 middleware 时 |
+| [code-style.md](./code-style.md) | 组件、`'use client'`、样式、封装层、测试口径 |
+| [code-review.md](./code-review.md) | Review 或自我审查 |
 
 ## 与 AGENTS.md 的关系
 
-`AGENTS.md` 是面向 AI 编码代理的操作策略文件，而本目录存放的是面向人类开发者的完整规范文档。AGENTS.md 中的规则应与本目录下的规范保持一致，但本目录可以包含更详细的解释和背景说明。
+AGENTS.md 是索引。本目录是展开。两者冲突时以 **ADR + libraries.md + 较新的 conventions** 为准，并开批量结算修正另一份，禁止长期双口径。

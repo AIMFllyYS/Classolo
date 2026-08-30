@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
@@ -8,7 +10,13 @@ export default function HomePage() {
         AI 课堂工作台 —— 实时录音转文字、AI 思维导图笔记与生成式组件渲染
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        工作台（左侧导航栏 + 文稿区 + 笔记区 + 渲染区）开发中
+        <Link href="/settings/" className="text-primary hover:underline">
+          设置
+        </Link>
+        <span className="mx-2">·</span>
+        <Link href="/playbook/" className="text-primary hover:underline">
+          Playbook
+        </Link>
       </p>
     </main>
   )

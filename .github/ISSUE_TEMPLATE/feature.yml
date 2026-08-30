@@ -1,0 +1,34 @@
+name: Feature
+description: 新功能或增强（须先走 issue-creator skill）
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        创建前必须阅读 `docs/skills-registry.md` 并调用 `/claude:issue-creator`。
+  - type: checkboxes
+    id: skills
+    attributes:
+      label: Skills
+      options:
+        - label: 已调用 `/claude:issue-creator` 并按其规范写了本 issue
+          required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: 摘要
+      description: 要做什么、成功长什么样
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 范围 / 非目标
+      description: 明确不做的事
+  - type: textarea
+    id: docs
+    attributes:
+      label: 相关文档
+      description: ADR / spec / playbook 路径
+      placeholder: docs/adr/… docs/specs/…

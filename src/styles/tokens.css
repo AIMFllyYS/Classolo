@@ -52,9 +52,11 @@
   --radius: 0.625rem;
 }
 
-/* ─── Dark mode — deep space ─── */
-.dark,
-:root {
+/*
+ * 颜色只挂在 .light / .dark 上。默认主题 = 跟随系统（ADR-0014）：
+ * layout 内联脚本在首屏前给 <html> 打上 class，避免 :root 写死暗色。
+ */
+.dark {
   --background: #020617;
   --foreground: #f1f5f9;
   --card: #0f172a;

@@ -17,9 +17,8 @@ node_modules/
 
 # ========================
 # Next.js
-# ========================
-next-env.d.ts
-.vercel
+# next-env.d.ts 由 Next 生成，但 CI 的 tsc 需要它，故纳入版本库
+
 
 # ========================
 # Production

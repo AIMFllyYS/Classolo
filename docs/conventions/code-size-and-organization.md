@@ -70,13 +70,18 @@ Next.js App Router 支持 safe colocation by default，文件放在路由文件�
 ├─ 无业务逻辑的纯展示组件（Button, Card, Input）
 │   └─ src/components/ui/
 │
-└─ 通用工具函数 / hooks
-    └─ src/lib/
+├─ 第三方领域库的封装（xyflow / resizable / AI SDK / PGlite / ASR）
+│   └─ 查 docs/libraries.md 的「封装层入口」，不要新开平行入口
+│
+└─ 通用工具函数 / hooks（无业务）
+    └─ src/lib/（ASR/AI/DB 不放这里的散文件，走 providers/ai/db）
 ```
 
 ### `src/features/` 的正确用法
 
-`src/features/<domain>/` 拥有该领域的全部代码：schema、server actions、queries、client components、types、tests。路由 `app/(app)/<domain>/page.tsx` 只做组合（通常 <30 行）。
+`src/features/<domain>/` 拥有该领域的全部代码：types、zod schema、Zustand store、叶子组件。本项目无 Server Actions / Route Handler——读写走 `src/lib/db` Repository 与 Electron IPC。
+
+路由 `src/app/page.tsx`（及日后少量静态页）只做组装（通常 <30 行）。领域示例：`transcript`、`notes`、`render-modules`、`agent`、`settings`。
 
 **提升到 features 的条件（全部满足）**：
 1. 该领域是一个可独立命名的业务概念

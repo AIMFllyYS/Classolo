@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 文档索引
+    url: https://github.com/AIMFllyYS/Classolo/blob/main/AGENTS.md
+    about: 先读 AGENTS.md Documentation Index，再开 issue

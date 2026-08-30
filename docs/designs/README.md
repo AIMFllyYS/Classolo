@@ -13,6 +13,7 @@
 
 - [architecture-overview.md](./architecture-overview.md) — Classolo 总体架构（工作台布局、可插拔 Provider、本地数据、生态迁移路径）
 - [render-module-protocol.md](./render-module-protocol.md) — 渲染区自定义组件协议（CRP）
+- [feature-communication.md](./feature-communication.md) — Feature 间通信三通道（只读切片 / CRP 投影 / 命令总线；ADR-0017）
 - `library-showcase/*.html` — Phase 3 选型对比页（六关注点 + 三轮 ASR 调研，双击即看；每页底部含决策历史）
 
 ## 文档结构模板

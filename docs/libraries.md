@@ -6,7 +6,7 @@
 | 关注点 | 层 | 所有者 | 版本 | 封装层入口 | ADR | lessons |
 |---|---|---|---|---|---|---|
 | UI 基础组件 | 组件库 | shadcn/ui + radix-ui + Tailwind v4 | shadcn ^3.8.5 | `src/components/ui/` | ADR-0003 | docs/lessons/shadcn.md |
-| 设计令牌/主题 | CSS 变量 | StudySolo 令牌体系（生态沿用） | — | `src/styles/tokens.css` | ADR-0003 | — |
+| 设计令牌/主题 | CSS 变量 | StudySolo 令牌；默认跟随系统 | — | `src/styles/tokens.css` + `src/lib/theme/` | ADR-0014 | — |
 | 状态管理 | 客户端 store | zustand | ^5.0.11 | 直接使用（豁免封装） | ADR-0003 | — |
 | 流式 Markdown/富文本 | 渲染管线 | streamdown + react-markdown 全家 + katex + shiki | streamdown ^2.3.0 | `src/components/markdown/` | ADR-0011 | docs/lessons/streamdown.md |
 | 实时语音转文字 | 6 协议族适配器（自研） | `src/lib/providers/asr/`（阶跃/百炼 realtime-ws 默认） | — | `src/lib/providers/asr/` | ADR-0004 | docs/lessons/asr-adapters.md |

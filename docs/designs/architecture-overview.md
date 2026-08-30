@@ -60,7 +60,7 @@ src/styles/               StudySolo 设计令牌（tokens.css）
 electron/                 （打包阶段建）main/preload，与 src/ 隔离
 ```
 
-依赖方向：`app → features → lib`。features 之间禁止横向 import（经事件/CRP 协议消息通信）。第三方领域库一律走封装层（`docs/libraries.md` 的"封装层入口"列）。
+依赖方向：`app → features → lib`。features 之间禁止横向 import（经 `src/lib/session/` 三通道，见 [feature-communication.md](./feature-communication.md)）。静态路径封闭清单见 [routing.md](../conventions/routing.md)。第三方领域库一律走封装层（`docs/libraries.md` 的"封装层入口"列）。
 
 ## 三、可插拔 Provider 架构（生态迁移的核心保险）
 
