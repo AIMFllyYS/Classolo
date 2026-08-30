@@ -6,3 +6,4 @@
  * 约定：工作台四区布局比例经 useDefaultLayout 持久化到 localStorage（设备级偏好，不进 PGlite）。
  */
 export { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
+export { WorkbenchShell, type WorkbenchShellProps } from './workbench-shell'
