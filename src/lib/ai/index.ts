@@ -3,26 +3,14 @@
  * 业务代码禁止直接 import 'ai' / '@ai-sdk/openai-compatible'，一律经由此处。
  * 修改第三方调用方式时优先改这里。
  *
- * 硬规则：模型必须经 createOpenAICompatible 实例创建，
+ * 硬规则：模型必须经 createModel() 创建（内部 createOpenAICompatible 实例）。
  * 禁止使用字符串模型 ID（会被 AI SDK 路由到 AI Gateway）。
+ * 密钥只走 resolveSecret（ADR-0013），本目录不直接读 process.env。
  */
 export { generateText, streamText, tool } from 'ai'
-export { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-
-export interface AIProviderConfig {
-  apiKey: string
-  baseUrl: string
-  model: string
-}
-
-/** 用户自配的 OpenAI 兼容模型实例（设置页 / .env.local 注入） */
-export function createModel(config: AIProviderConfig) {
-  const provider = createOpenAICompatible({
-    name: 'classolo-user-provider',
-    apiKey: config.apiKey,
-    baseURL: config.baseUrl,
-  })
-  return provider(config.model)
-}
+export {
+  createModel,
+  MissingAISecretError,
+  MISSING_AI_SECRET_MESSAGE,
+  type CreateModelConfig,
+} from './create-model'
