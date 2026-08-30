@@ -69,7 +69,9 @@ export function AsrSettingsForm() {
       <CardHeader>
         <CardTitle>ASR 协议族</CardTitle>
         <CardDescription>
-          族与 dialect 必须显式选择，禁止从 baseURL 推断（ADR-0004）。密钥写入 sessionStorage 覆盖层，不进 PGlite。录音中更改只在下次录音生效。
+          族与 dialect 必须显式选择，禁止从 baseURL 推断（ADR-0004）。
+          transcriptions-rest 为切片伪流式，文稿区会标注「准实时」。密钥写入
+          sessionStorage 覆盖层，不进 PGlite。录音中更改只在下次录音生效。
         </CardDescription>
       </CardHeader>
       <CardContent>
