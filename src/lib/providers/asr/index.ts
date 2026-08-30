@@ -5,6 +5,7 @@
  *   local-engine/   sherpa-onnx（Electron 阶段接入）
  * 业务代码只 import 本文件与 types.ts。
  */
+import { getCustomHotwords, mergeHotwords } from './custom-hotwords'
 import { getSelectedHotwordPackId, resolveHotwordPack } from './hotword-packs'
 import type { ASRConfig, ASRProvider } from './types'
 import { StepfunRealtimeWsProvider } from './realtime-ws/stepfun'
@@ -18,22 +19,34 @@ export type {
 } from './types'
 export { MissingAsrSecretError, MISSING_ASR_SECRET_MESSAGE } from './missing-secret'
 export {
+  DEFAULT_HOTWORD_PACK_ID,
   getSelectedHotwordPackId,
   listHotwordPacks,
   resetHotwordPackSelection,
   resolveHotwordPack,
   selectHotwordPack,
+  subscribeHotwordPack,
   type HotwordPack,
 } from './hotword-packs'
 export { hotwordsForStart } from './hotwords'
+export {
+  getCustomHotwordText,
+  getCustomHotwords,
+  mergeHotwords,
+  parseCustomHotwordText,
+  resetCustomHotwords,
+  setCustomHotwords,
+  subscribeCustomHotwords,
+} from './custom-hotwords'
 
 export function withHotwordPack(config: ASRConfig): ASRConfig {
-  if (config.hotwords && config.hotwords.length > 0) {
-    return config
-  }
+  const packTerms =
+    config.hotwords && config.hotwords.length > 0
+      ? config.hotwords
+      : [...resolveHotwordPack(getSelectedHotwordPackId())]
   return {
     ...config,
-    hotwords: [...resolveHotwordPack(getSelectedHotwordPackId())],
+    hotwords: mergeHotwords(packTerms, getCustomHotwords()),
   }
 }
 

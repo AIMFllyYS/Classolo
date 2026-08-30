@@ -1,5 +1,7 @@
 import {
+  getCustomHotwords,
   getSelectedHotwordPackId,
+  mergeHotwords,
   resolveHotwordPack,
   type ASRConfig,
   type ASRFamily,
@@ -26,6 +28,6 @@ export function readAsrRuntimeConfig(): ASRConfig {
     apiKey: '',
     model: readEnv('ASR_MODEL') || 'stepaudio-2.5-asr-stream',
     sampleRate: Number.isFinite(sampleRate) ? sampleRate : 16000,
-    hotwords: [...resolveHotwordPack(packId)],
+    hotwords: mergeHotwords(resolveHotwordPack(packId), getCustomHotwords()),
   }
 }
