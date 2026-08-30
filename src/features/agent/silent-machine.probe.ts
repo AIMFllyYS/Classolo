@@ -30,6 +30,7 @@ export async function readSilentAgentThrottlesBySegment(): Promise<string> {
     readCommittedCount: () => count,
     readCommittedVersion: () => version,
     readOutlineVersion: () => 2,
+    onTick: () => undefined,
   })
 
   version = 1
