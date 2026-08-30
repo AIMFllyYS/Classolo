@@ -2,6 +2,7 @@
  * Classolo Render Protocol（CRP）协议类型（ADR-0010）。
  * 渲染模块之间禁止横向 import——模块只允许依赖本文件、src/lib、src/components/ui。
  * 完整协议设计见 docs/designs/render-module-protocol.md。
+ * transcriptAnchor 点击回调由 Host 注入，不进协议 schema。
  */
 
 export interface RenderMessage<P = unknown> {

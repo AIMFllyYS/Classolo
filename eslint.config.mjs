@@ -214,6 +214,44 @@ const eslintConfig = [
       'no-restricted-syntax': ['error', ...electronRestrictedSyntax],
     },
   },
+  {
+    files: ['src/features/render-modules/*/**/*.{ts,tsx}'],
+    ignores: [
+      'src/features/render-modules/host.tsx',
+      'src/features/render-modules/registry.ts',
+      'src/features/render-modules/dispatch.ts',
+      'src/features/render-modules/dispatch.probe.ts',
+      'src/features/render-modules/error-card.tsx',
+      'src/features/render-modules/kit.ts',
+      'src/features/render-modules/manifest.ts',
+      'src/features/render-modules/types.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '../image',
+                '../image/**',
+                '../rich-text',
+                '../rich-text/**',
+                '../ai-ask',
+                '../ai-ask/**',
+                '../gen-ui',
+                '../gen-ui/**',
+                '../agent-status',
+                '../agent-status/**',
+              ],
+              message:
+                'render modules must not import sibling modules; depend on types.ts only (ADR-0010)',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]
 
 export default eslintConfig
