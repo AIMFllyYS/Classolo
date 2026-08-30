@@ -25,6 +25,10 @@ export function TranscriptPane() {
     transcriptPrivateStore,
     (state) => state.highlightId,
   )
+  const connection = useStore(
+    transcriptPrivateStore,
+    (state) => state.connection,
+  )
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -67,6 +71,8 @@ export function TranscriptPane() {
         录音状态：<span className="text-foreground">{status}</span>
         <span className="mx-2">·</span>
         电平 {Math.round(level * 100)}%
+        <span className="mx-2">·</span>
+        连接 {connection}
       </p>
       {error ? (
         <p className="text-destructive" data-slot="capture-error">

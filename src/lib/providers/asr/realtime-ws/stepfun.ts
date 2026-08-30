@@ -46,6 +46,9 @@ export class StepfunRealtimeWsProvider implements ASRProvider {
   private readonly finalListeners = new Set<(segment: ASRSegment) => void>()
   private readonly errorListeners = new Set<(error: Error) => void>()
   private lastPartial = ''
+  private audioQueue: ArrayBuffer[] = []
+  private readonly maxQueue = 50
+  private intentionalStop = false
 
   constructor(
     private readonly config: ASRConfig,
@@ -68,6 +71,7 @@ export class StepfunRealtimeWsProvider implements ASRProvider {
       throw new Error('缺 ASR 采样率：必须显式配置')
     }
 
+    this.intentionalStop = false
     const socket = this.socketFactory(this.config.baseUrl)
     this.socket = socket
     this.lastPartial = ''
@@ -82,6 +86,11 @@ export class StepfunRealtimeWsProvider implements ASRProvider {
     socket.addEventListener('message', (event) => {
       this.handleMessage(typeof event.data === 'string' ? event.data : '')
     })
+    socket.addEventListener('close', () => {
+      if (!this.intentionalStop) {
+        this.emitError(new Error('ASR_DISCONNECTED'))
+      }
+    })
 
     socket.send(
       JSON.stringify({
@@ -95,10 +104,15 @@ export class StepfunRealtimeWsProvider implements ASRProvider {
         },
       }),
     )
+    this.flushAudioQueue()
   }
 
   sendAudio(chunk: ArrayBuffer): void {
     if (!this.socket || this.socket.readyState !== OPEN) {
+      this.audioQueue.push(chunk)
+      if (this.audioQueue.length > this.maxQueue) {
+        this.audioQueue.shift()
+      }
       return
     }
     this.socket.send(
@@ -110,8 +124,18 @@ export class StepfunRealtimeWsProvider implements ASRProvider {
   }
 
   async stop(): Promise<void> {
+    this.intentionalStop = true
     this.socket?.close()
     this.socket = null
+    this.audioQueue = []
+  }
+
+  private flushAudioQueue(): void {
+    const pending = this.audioQueue
+    this.audioQueue = []
+    for (const chunk of pending) {
+      this.sendAudio(chunk)
+    }
   }
 
   onPartial(cb: (segment: ASRSegment) => void): void {

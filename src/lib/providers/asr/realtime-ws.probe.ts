@@ -13,6 +13,11 @@ class FakeSocket implements SocketLike {
 
   close(): void {
     this.readyState = 3
+    for (const listener of this.listeners.get('close') ?? []) listener({})
+  }
+
+  drop(): void {
+    this.close()
   }
 
   addEventListener(
@@ -121,6 +126,33 @@ export async function readExplicitUrlAndCallbacks(): Promise<string> {
     : 'missing hint'
 }
 
+export async function readDisconnectSignalsReconnect(): Promise<string> {
+  process.env.ASR_API_KEY = 'test-asr-key'
+  const socket = new FakeSocket()
+  const provider = new StepfunRealtimeWsProvider(
+    {
+      family: 'realtime-ws',
+      dialect: 'stepfun',
+      baseUrl: 'wss://api.stepfun.com/v1/realtime/asr/stream',
+      apiKey: '',
+      model: 'stepaudio-2.5-asr-stream',
+      sampleRate: 16000,
+    },
+    () => {
+      queueMicrotask(() => socket.open())
+      return socket
+    },
+  )
+  const errors: string[] = []
+  provider.onError((error) => errors.push(error.message))
+  await provider.start()
+  socket.drop()
+  if (!errors.includes('ASR_DISCONNECTED')) {
+    throw new Error('close must surface ASR_DISCONNECTED')
+  }
+  return 'reconnect-signal:ok'
+}
+
 const invokedDirectly = process.argv[1]?.replaceAll('\\', '/').endsWith(
   '/realtime-ws.probe.ts',
 )
@@ -128,6 +160,7 @@ if (invokedDirectly) {
   void (async () => {
     const missing = await readMissingAsrSecretDiagnostic()
     const ok = await readExplicitUrlAndCallbacks()
-    process.stdout.write(`${missing}\n${ok}\n`)
+    const reconnect = await readDisconnectSignalsReconnect()
+    process.stdout.write(`${missing}\n${ok}\n${reconnect}\n`)
   })()
 }
