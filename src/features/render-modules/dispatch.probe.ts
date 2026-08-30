@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
 import { resolveRenderView } from './dispatch'
+import { imageModule } from './image/manifest'
 import { listRenderTools, type RenderModuleRegistry } from './manifest'
 import type { RenderModuleManifest } from './manifest'
-import { renderModuleRegistry } from './registry'
 import type { RenderMessage } from './types'
 
 const stub: RenderModuleManifest<{ title: string }> = {
@@ -48,7 +48,7 @@ export function readInvalidPropsShowError(): string {
   if (tools.length !== 1 || tools[0]?.name !== 'render_stub') {
     throw new Error('manifest must derive agent tool names')
   }
-  if (renderModuleRegistry.image?.toolName !== 'render_image') {
+  if (imageModule.toolName !== 'render_image') {
     throw new Error('image module must stay registered')
   }
   return `crp-dispatch:invalid;tools=${tools.length}`

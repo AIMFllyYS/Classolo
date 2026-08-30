@@ -1,6 +1,7 @@
 import { resolveRenderView } from '../dispatch'
-import { renderModuleRegistry } from '../registry'
+import type { RenderModuleRegistry } from '../manifest'
 
+import { imageModule } from './manifest'
 import { searchClassroomImage } from './search'
 
 const IMAGE_ENV_KEYS = [
@@ -24,10 +25,10 @@ async function withoutImageEnv<T>(run: () => Promise<T>): Promise<T> {
 }
 
 export async function readImageModuleStates(): Promise<string> {
-  const registered = renderModuleRegistry.image
-  if (!registered || registered.toolName !== 'render_image') {
+  if (imageModule.toolName !== 'render_image') {
     throw new Error('image module must be registered')
   }
+  const registry = { image: imageModule } as RenderModuleRegistry
   const invalid = resolveRenderView(
     {
       id: 'img-bad',
@@ -37,7 +38,7 @@ export async function readImageModuleStates(): Promise<string> {
       props: { query: 1 },
       meta: { createdAt: 1, source: 'system' },
     },
-    renderModuleRegistry,
+    registry,
   )
   if (invalid.ok) {
     throw new Error('illegal image props must fail validation')
@@ -51,7 +52,7 @@ export async function readImageModuleStates(): Promise<string> {
       props: { query: 'neuron' },
       meta: { createdAt: 1, source: 'silent-agent' },
     },
-    renderModuleRegistry,
+    registry,
   )
   if (!valid.ok) {
     throw new Error('legal image props must dispatch')
