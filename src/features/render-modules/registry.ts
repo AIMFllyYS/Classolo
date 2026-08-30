@@ -1,3 +1,5 @@
+import { agentStatusModule } from './agent-status'
+import { aiAskModule } from './ai-ask'
 import { imageModule } from './image'
 import type { RenderModuleRegistry } from './manifest'
 import { richTextModule } from './rich-text'
@@ -9,4 +11,6 @@ import { richTextModule } from './rich-text'
 export const renderModuleRegistry = {
   image: imageModule,
   'rich-text': richTextModule,
+  'agent-status': agentStatusModule,
+  'ai-ask': aiAskModule,
 } as RenderModuleRegistry
