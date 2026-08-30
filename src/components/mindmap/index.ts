@@ -19,6 +19,7 @@ export {
 } from './classroom-outline-node'
 export { classroomMindmapKit, type ClassroomMindmapKit } from './kit'
 export {
+  diffOutlineLayout,
   layoutOutlineTree,
   OUTLINE_NODE_HEIGHT,
   OUTLINE_NODE_WIDTH,

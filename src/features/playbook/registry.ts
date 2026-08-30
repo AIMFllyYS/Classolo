@@ -46,7 +46,7 @@ export const motionPresets: PlaybookPreset[] = [
   {
     id: 'mindmap-node-enter',
     title: '导图节点进入',
-    status: 'planned',
+    status: 'ready',
     summary: '新节点进入动画；已有节点禁止闪烁重挂（ADR-0005）',
   },
 ]

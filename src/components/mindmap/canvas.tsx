@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Background,
   Controls,
@@ -15,10 +15,7 @@ import '@xyflow/react/dist/style.css'
 import { cn } from '@/lib/utils'
 
 import { ClassroomOutlineNode } from './classroom-outline-node'
-import {
-  layoutOutlineTree,
-  type OutlineTreeNode,
-} from './layout'
+import { diffOutlineLayout, type OutlineTreeNode } from './layout'
 
 const nodeTypes = {
   classroomOutline: ClassroomOutlineNode,
@@ -30,27 +27,39 @@ export interface ClassroomMindmapProps {
   onNodeClick?: (id: string) => void
 }
 
+function treeSignature(nodes: readonly OutlineTreeNode[]): string {
+  return nodes
+    .map((node) => `${node.id}\0${node.title}\0${node.parentId ?? ''}`)
+    .join('\n')
+}
+
 function MindmapFlow({ nodes, className, onNodeClick }: ClassroomMindmapProps) {
-  const graph = useMemo(() => layoutOutlineTree(nodes), [nodes])
-  const flowNodes: Node[] = useMemo(
-    () =>
-      graph.nodes.map((node) => ({
-        id: node.id,
-        type: 'classroomOutline',
-        position: node.position,
-        data: { title: node.title },
-        draggable: false,
-      })),
-    [graph],
-  )
+  const signature = treeSignature(nodes)
+  const [seenSignature, setSeenSignature] = useState(signature)
+  const [diffed, setDiffed] = useState(() => diffOutlineLayout([], nodes))
+  if (signature !== seenSignature) {
+    setSeenSignature(signature)
+    setDiffed(diffOutlineLayout(diffed.graph.nodes, nodes))
+  }
+
+  const flowNodes: Node[] = useMemo(() => {
+    const entered = new Set(diffed.enteredIds)
+    return diffed.graph.nodes.map((node) => ({
+      id: node.id,
+      type: 'classroomOutline',
+      position: node.position,
+      data: { title: node.title, entering: entered.has(node.id) },
+      draggable: false,
+    }))
+  }, [diffed])
   const flowEdges: Edge[] = useMemo(
     () =>
-      graph.edges.map((edge) => ({
+      diffed.graph.edges.map((edge) => ({
         id: edge.id,
         source: edge.source,
         target: edge.target,
       })),
-    [graph],
+    [diffed],
   )
 
   return (

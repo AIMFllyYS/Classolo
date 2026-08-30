@@ -91,3 +91,23 @@ export function layoutOutlineTree(
 
   return { nodes: laidOut, edges }
 }
+
+export function diffOutlineLayout(
+  previous: readonly LaidOutNode[],
+  nextNodes: readonly OutlineTreeNode[],
+): { graph: LaidOutGraph; enteredIds: readonly string[] } {
+  const fresh = layoutOutlineTree(nextNodes)
+  const prevById = new Map(
+    previous.map((node) => [node.id, node.position] as const),
+  )
+  const enteredIds: string[] = []
+  const nodes = fresh.nodes.map((node) => {
+    const kept = prevById.get(node.id)
+    if (kept) {
+      return { ...node, position: kept }
+    }
+    enteredIds.push(node.id)
+    return node
+  })
+  return { graph: { nodes, edges: fresh.edges }, enteredIds }
+}

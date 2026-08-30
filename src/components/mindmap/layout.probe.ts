@@ -1,4 +1,4 @@
-import { layoutOutlineTree } from './layout'
+import { diffOutlineLayout, layoutOutlineTree } from './layout'
 
 export function readTreeLayoutPositions(): string {
   const graph = layoutOutlineTree([
@@ -35,9 +35,48 @@ export function readTreeLayoutPositions(): string {
   return `mindmap-layout:${graph.nodes.length};dy=${child.position.y - root.position.y}`
 }
 
+export function readStableIdDiffKeepsPositions(): string {
+  let previous: ReturnType<typeof layoutOutlineTree>['nodes'] = []
+  const kept = new Map<string, { x: number; y: number }>()
+  for (let i = 0; i < 20; i += 1) {
+    const tree = [
+      { id: 'root', title: '力学' },
+      ...Array.from({ length: i + 1 }, (_, index) => ({
+        id: `n${index}`,
+        title: `节点${index}`,
+        parentId: 'root',
+      })),
+    ]
+    const { graph, enteredIds } = diffOutlineLayout(previous, tree)
+    for (const [id, position] of kept) {
+      const node = graph.nodes.find((item) => item.id === id)
+      if (!node) throw new Error(`stable id ${id} disappeared`)
+      if (node.position.x !== position.x || node.position.y !== position.y) {
+        throw new Error(`existing node ${id} was relaid out`)
+      }
+    }
+    if (i === 0 && enteredIds.length < 2) {
+      throw new Error('first frame must enter root and first child')
+    }
+    if (i > 0 && !enteredIds.includes(`n${i}`)) {
+      throw new Error('only the new id should enter')
+    }
+    for (const node of graph.nodes) {
+      kept.set(node.id, node.position)
+    }
+    previous = graph.nodes
+  }
+  if (kept.has('x') || JSON.stringify([...kept.values()]).includes('cs_')) {
+    throw new Error('layout must stay in memory, not cs_ tables')
+  }
+  return `mindmap-diff:20;kept=${kept.size}`
+}
+
 const invokedDirectly = process.argv[1]?.replaceAll('\\', '/').endsWith(
   '/layout.probe.ts',
 )
 if (invokedDirectly) {
-  process.stdout.write(`${readTreeLayoutPositions()}\n`)
+  process.stdout.write(
+    `${readTreeLayoutPositions()}\n${readStableIdDiffKeepsPositions()}\n`,
+  )
 }

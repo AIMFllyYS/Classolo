@@ -2,11 +2,12 @@
 
 import { ClassroomMindmap } from './canvas'
 import { ClassroomOutlineNode } from './classroom-outline-node'
-import { layoutOutlineTree } from './layout'
+import { diffOutlineLayout, layoutOutlineTree } from './layout'
 
 const requiredMindmapKeys = [
   'ClassroomMindmap',
   'ClassroomOutlineNode',
+  'diffOutlineLayout',
   'layoutOutlineTree',
 ] as const
 
@@ -19,6 +20,7 @@ type RequiredMindmapKey = (typeof requiredMindmapKeys)[number]
 export const classroomMindmapKit = {
   ClassroomMindmap,
   ClassroomOutlineNode,
+  diffOutlineLayout,
   layoutOutlineTree,
 } satisfies Record<RequiredMindmapKey, unknown>
 
