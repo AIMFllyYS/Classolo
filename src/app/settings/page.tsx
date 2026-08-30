@@ -1,22 +1,23 @@
 import Link from 'next/link'
 
+import { SettingsScreen } from '@/features/settings/screen'
+
 export default function SettingsPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-8">
-      <h1 className="text-3xl font-semibold text-foreground">设置</h1>
-      <p className="mt-3 text-muted-foreground">
-        API / ASR 协议族、热词与主题（默认跟随系统）将在本页配置。用户在此填写的密钥优先级高于
-        .env（ADR-0013）。
-      </p>
-      <p className="mt-6 text-sm">
+    <main className="mx-auto min-h-screen max-w-2xl px-8 py-12">
+      <p className="text-sm text-muted-foreground">
         <Link href="/" className="text-primary hover:underline">
-          返回工作台
+          工作台
         </Link>
-        <span className="mx-3 text-muted-foreground">·</span>
-        <Link href="/playbook/" className="text-primary hover:underline">
-          Playbook
-        </Link>
+        <span className="mx-2">/</span>
+        设置
       </p>
+      <h1 className="mt-4 text-3xl font-semibold text-foreground">设置</h1>
+      <p className="mt-3 text-sm text-muted-foreground">
+        用户在此填写的密钥优先于运行时 env（ADR-0013），且不写入公开切片或
+        PGlite。
+      </p>
+      <SettingsScreen />
     </main>
   )
 }
