@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CrpDemo } from '@/app/playbook/_crp-demo'
 import { crpHostKit } from '@/features/render-modules/kit'
 import { modulePresets, playbookNav } from '@/features/playbook/registry'
 
@@ -38,6 +39,7 @@ export default function PlaybookModulesPage() {
           </li>
         ))}
       </ul>
+      <CrpDemo />
     </main>
   )
 }
