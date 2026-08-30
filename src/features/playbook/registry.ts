@@ -22,6 +22,13 @@ export interface PlaybookPreset {
 
 export const uiPresets: PlaybookPreset[] = [
   {
+    id: 'classroom-ui-kit',
+    title: '课堂基础组件',
+    status: 'ready',
+    summary:
+      '按钮、输入、选择、开关、标签页、卡片、对话框、toast；封装层 src/components/ui',
+  },
+  {
     id: 'workbench-shell',
     title: '工作台壳层',
     status: 'planned',

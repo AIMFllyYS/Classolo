@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { playbookNav, uiPresets } from '@/features/playbook/registry'
+import { UiKitShowcase } from '@/features/playbook/ui-kit-showcase'
 
 export default function PlaybookUiPage() {
   return (
@@ -28,9 +29,11 @@ export default function PlaybookUiPage() {
           <li key={item.id} className="rounded-lg border border-border bg-card p-4">
             <p className="font-medium text-card-foreground">{item.title}</p>
             <p className="mt-1 text-sm text-muted-foreground">{item.summary}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{item.status}</p>
           </li>
         ))}
       </ul>
+      <UiKitShowcase />
     </main>
   )
 }
