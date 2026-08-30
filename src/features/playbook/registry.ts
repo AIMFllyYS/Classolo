@@ -52,7 +52,7 @@ export const motionPresets: PlaybookPreset[] = [
 ]
 
 export const modulePresets: PlaybookPreset[] = [
-  { id: 'image', title: 'image', status: 'planned', summary: '图片检索渲染' },
+  { id: 'image', title: 'image', status: 'ready', summary: '图片检索渲染' },
   { id: 'rich-text', title: 'rich-text', status: 'planned', summary: '富文本补充' },
   { id: 'ai-ask', title: 'ai-ask', status: 'planned', summary: '随堂提问卡片' },
   { id: 'gen-ui', title: 'gen-ui', status: 'planned', summary: '受控 DSL 生成式 UI' },

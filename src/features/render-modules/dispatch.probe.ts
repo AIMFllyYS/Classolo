@@ -48,8 +48,8 @@ export function readInvalidPropsShowError(): string {
   if (tools.length !== 1 || tools[0]?.name !== 'render_stub') {
     throw new Error('manifest must derive agent tool names')
   }
-  if (Object.keys(renderModuleRegistry).length !== 0) {
-    throw new Error('P0 registry starts empty; modules register in later issues')
+  if (renderModuleRegistry.image?.toolName !== 'render_image') {
+    throw new Error('image module must stay registered')
   }
   return `crp-dispatch:invalid;tools=${tools.length}`
 }
