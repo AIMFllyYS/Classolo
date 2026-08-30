@@ -8,14 +8,26 @@
  *   Electron 期：main process 的 app.getPath('userData') 文件库，IPC 供 renderer
  * 写入策略：转写流先内存 ring buffer，按段批量 INSERT（禁止逐句写库）。
  */
-import { PGlite } from '@electric-sql/pglite'
-import { drizzle } from 'drizzle-orm/pglite'
-
-let client: PGlite | null = null
-
-export function getDb() {
-  if (!client) {
-    client = new PGlite('idb://classolo', { relaxedDurability: true })
-  }
-  return drizzle({ client })
-}
+export { ANONYMOUS_USER_ID, ANONYMOUS_USER_SETTING_KEY } from './constants'
+export { getDb, openDatabase, resetDbSingletonForTests } from './client'
+export type { ClassoloDb, OpenDatabaseOptions } from './client'
+export {
+  deleteSession,
+  getNoteOutline,
+  getSetting,
+  insertChatMessage,
+  insertProviderProfile,
+  insertRenderMessage,
+  insertSession,
+  insertTranscriptSegments,
+  listChatMessages,
+  listCsTables,
+  listProviderProfiles,
+  listRenderMessages,
+  listSessions,
+  listTranscriptSegments,
+  updateSession,
+  upsertNoteOutline,
+  upsertSetting,
+} from './repositories'
+export type { AsrSnapshot, SessionStats } from './schema'
