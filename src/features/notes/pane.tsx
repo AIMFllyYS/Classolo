@@ -1,8 +1,13 @@
 'use client'
 
+import { useEffect } from 'react'
+
 import { useNotesPublic } from '@/lib/session'
 
+import { startOutlineOrganizer } from './organizer'
+
 export function NotesPane() {
+  useEffect(() => startOutlineOrganizer(), [])
   const version = useNotesPublic((state) => state.outlineVersion)
   const digest = useNotesPublic((state) => state.outlineDigest)
 
