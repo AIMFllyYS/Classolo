@@ -1,6 +1,29 @@
 /**
  * Feature 跨域通信唯一入口（ADR-0017）。
- * 公开只读切片 / CRP 投影 / 命令总线在工作台落地时补齐。
- * 禁止用 features 互相 import 来「暂时凑合」；禁止在此存放 API key 或分屏比例。
+ * 只导出公开只读切片。writes/* 不从本文件再导出。
+ * 禁止存放 API key 或分屏比例。
  */
-export {}
+export { sessionPublicKit, type SessionPublicKit } from './public-kit'
+export {
+  getNotesPublic,
+  subscribeNotesPublic,
+  useNotesPublic,
+} from './reads/notes'
+export {
+  getSettingsPublic,
+  subscribeSettingsPublic,
+  useSettingsPublic,
+} from './reads/settings'
+export {
+  getTranscriptPublic,
+  subscribeTranscriptPublic,
+  useTranscriptPublic,
+} from './reads/transcript'
+export type {
+  NotesPublic,
+  OutlineDigestNode,
+  RecordingStatus,
+  SettingsPublic,
+  TranscriptCommittedSegment,
+  TranscriptPublic,
+} from './types'
