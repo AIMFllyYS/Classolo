@@ -6,6 +6,8 @@ import {
   getSettingsPublic,
   subscribeSettingsPublic,
 } from './reads/settings'
+import { publishCommand, subscribeCommands } from './commands'
+import { getRenderMessages, subscribeRenderProjection } from './reads/render'
 import {
   getTranscriptPublic,
   subscribeTranscriptPublic,
@@ -73,6 +75,9 @@ type ForbiddenWriteExport =
   | 'resetTranscriptPublic'
   | 'resetNotesPublic'
   | 'resetSettingsPublic'
+  | 'upsertRenderMessage'
+  | 'revokeRenderMessage'
+  | 'resetRenderProjection'
 type LeakedWrite = Extract<keyof PublicExports, ForbiddenWriteExport>
 const writesStayPrivate: [LeakedWrite] extends [never] ? true : never = true
 void writesStayPrivate
@@ -84,6 +89,10 @@ export const sessionPublicKit = {
   subscribeNotesPublic,
   getSettingsPublic,
   subscribeSettingsPublic,
+  getRenderMessages,
+  subscribeRenderProjection,
+  publishCommand,
+  subscribeCommands,
 }
 
 export type SessionPublicKit = typeof sessionPublicKit

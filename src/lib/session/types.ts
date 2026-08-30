@@ -38,3 +38,39 @@ export interface SettingsPublic {
   asrReady: boolean
   aiReady: boolean
 }
+
+export type CommandSource = 'notes' | 'render' | 'agent' | 'settings' | 'system'
+
+export type SessionCommand =
+  | {
+      type: 'transcript.scrollTo'
+      segmentId: string
+      source: CommandSource
+    }
+  | {
+      type: 'transcript.highlight'
+      segmentId: string
+      source: CommandSource
+    }
+  | {
+      type: 'asr.configChanged'
+      source: 'settings'
+    }
+  | {
+      type: 'ai.configChanged'
+      source: 'settings'
+    }
+  | {
+      type: 'session.reset'
+      reason: 'new-recording' | 'user'
+    }
+
+export const P0_SESSION_COMMAND_TYPES = [
+  'transcript.scrollTo',
+  'transcript.highlight',
+  'asr.configChanged',
+  'ai.configChanged',
+  'session.reset',
+] as const
+
+export type P0SessionCommandType = (typeof P0_SESSION_COMMAND_TYPES)[number]
