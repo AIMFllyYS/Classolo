@@ -1,3 +1,7 @@
+import {
+  clearAllUserSecretOverrides,
+  resolveSecret,
+} from '@/lib/providers/secrets'
 import { getSettingsPublic, subscribeCommands } from '@/lib/session'
 import { resetCommandBus } from '@/lib/session/commands'
 import { resetSettingsPublic } from '@/lib/session/writes/settings'
@@ -10,6 +14,7 @@ export function readAsrSaveKeepsExplicitFamily(): string {
   resetCommandBus()
   resetSettingsPublic()
   resetAsrPrivate()
+  clearAllUserSecretOverrides()
   const seen: string[] = []
   const stop = subscribeCommands((command) => {
     seen.push(command.type)
@@ -42,6 +47,10 @@ export function readAsrSaveKeepsExplicitFamily(): string {
   const pub = JSON.stringify(getSettingsPublic())
   if (pub.includes(secret) || pub.includes('apiKey')) {
     throw new Error('settings public leaked the ASR key')
+  }
+  const resolved = resolveSecret('asr')
+  if (resolved.source !== 'user' || resolved.value !== secret) {
+    throw new Error('saved ASR key must be the resolveSecret user override')
   }
   if (!seen.includes('asr.configChanged')) {
     throw new Error('save must publish asr.configChanged')

@@ -43,7 +43,7 @@ export function AiSettingsForm() {
       <CardHeader>
         <CardTitle>AI 协议族</CardTitle>
         <CardDescription>
-          OpenAI 兼容 Chat Completions。用户填写的 key 优先于运行时 env（ADR-0013）。密钥只留在本机内存，不写入公开切片。
+          OpenAI 兼容 Chat Completions。用户填写的 key 优先于运行时 env（ADR-0013）。开发期覆盖写入 sessionStorage（不加密），不进 PGlite；桌面期将改走 Electron safeStorage。
         </CardDescription>
       </CardHeader>
       <CardContent>

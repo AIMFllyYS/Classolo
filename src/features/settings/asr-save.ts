@@ -1,4 +1,4 @@
-import { resolveSecret } from '@/lib/providers/secrets'
+import { resolveSecret, setUserSecretOverride } from '@/lib/providers/secrets'
 import {
   getSettingsPublic,
   getTranscriptPublic,
@@ -35,7 +35,8 @@ export function saveAsrSettings(
     sampleRate: String(parsed.sampleRate),
     apiKey: parsed.apiKey,
   })
-  const secret = resolveSecret('asr', parsed.apiKey || null)
+  setUserSecretOverride('asr', parsed.apiKey || null)
+  const secret = resolveSecret('asr')
   const recording = recordingStatus === 'recording'
   const current = getSettingsPublic()
   patchSettingsPublic({
