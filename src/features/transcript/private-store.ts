@@ -8,6 +8,7 @@ export interface TranscriptPrivateState {
   error: string | null
   partial: string
   highlightId: string | null
+  connection: 'idle' | 'live' | 'reconnecting'
 }
 
 const initialState: TranscriptPrivateState = {
@@ -16,6 +17,7 @@ const initialState: TranscriptPrivateState = {
   error: null,
   partial: '',
   highlightId: null,
+  connection: 'idle',
 }
 
 export const transcriptPrivateStore = createStore<TranscriptPrivateState>(

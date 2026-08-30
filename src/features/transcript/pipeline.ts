@@ -94,16 +94,33 @@ export async function startSession(): Promise<void> {
     patchTranscriptPrivate({ partial: '' })
   })
   asr.onError((error) => {
+    if (error.message === 'ASR_DISCONNECTED') {
+      patchTranscriptPrivate({ connection: 'reconnecting' })
+      void asr
+        .start()
+        .then(() => {
+          patchTranscriptPrivate({ connection: 'live', error: null })
+        })
+        .catch((reconnectError: unknown) => {
+          const message =
+            reconnectError instanceof Error
+              ? reconnectError.message
+              : 'ASR 重连失败'
+          patchTranscriptPrivate({ error: message })
+        })
+      return
+    }
     patchTranscriptPrivate({ error: error.message })
   })
   try {
     await asr.start()
   } catch (error) {
     const message = error instanceof Error ? error.message : 'ASR 启动失败'
-    patchTranscriptPrivate({ error: message, status: 'idle' })
+    patchTranscriptPrivate({ error: message, status: 'idle', connection: 'idle' })
     patchTranscriptPublic({ recordingStatus: 'idle' })
     return
   }
+  patchTranscriptPrivate({ connection: 'live' })
   provider = asr
   onPcmFrame((frame) => {
     const bytes = new Uint8Array(
