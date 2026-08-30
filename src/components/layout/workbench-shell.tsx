@@ -1,16 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   Group,
   Panel,
   Separator,
+  useDefaultLayout,
   usePanelRef,
 } from 'react-resizable-panels'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+
+import { isWorkbenchNarrow, WORKBENCH_MIN_WIDTH_PX } from './narrow'
 
 export interface WorkbenchShellProps {
   nav?: ReactNode
@@ -53,6 +56,34 @@ export function WorkbenchShell({
 }: WorkbenchShellProps) {
   const navPanelRef = usePanelRef()
   const [navCollapsed, setNavCollapsed] = useState(false)
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window === 'undefined' ? WORKBENCH_MIN_WIDTH_PX : window.innerWidth,
+  )
+  const rootLayout = useDefaultLayout({ id: 'workbench-root' })
+  const columnsLayout = useDefaultLayout({ id: 'workbench-columns' })
+  const transcriptStackLayout = useDefaultLayout({
+    id: 'workbench-transcript-stack',
+  })
+  const notesStackLayout = useDefaultLayout({ id: 'workbench-notes-stack' })
+
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  if (isWorkbenchNarrow(viewportWidth)) {
+    return (
+      <div
+        className="flex h-screen min-h-0 w-full items-center justify-center bg-background p-6 text-center"
+        data-slot="workbench-shell-narrow"
+      >
+        <p className="max-w-sm text-sm text-muted-foreground">
+          当前窗口过窄（小于 {WORKBENCH_MIN_WIDTH_PX}px）。课堂四区分屏已暂停，请加宽窗口或改用更大的屏幕，以免布局错位。
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -63,6 +94,8 @@ export function WorkbenchShell({
         id="workbench-root"
         orientation="horizontal"
         className="h-full w-full"
+        defaultLayout={rootLayout.defaultLayout}
+        onLayoutChanged={rootLayout.onLayoutChanged}
       >
         <Panel
           id="workbench-nav"
@@ -125,12 +158,16 @@ export function WorkbenchShell({
             id="workbench-columns"
             orientation="horizontal"
             className="h-full w-full"
+            defaultLayout={columnsLayout.defaultLayout}
+            onLayoutChanged={columnsLayout.onLayoutChanged}
           >
             <Panel id="workbench-transcript-col" defaultSize="50" minSize={180}>
               <Group
                 id="workbench-transcript-stack"
                 orientation="vertical"
                 className="h-full w-full"
+                defaultLayout={transcriptStackLayout.defaultLayout}
+                onLayoutChanged={transcriptStackLayout.onLayoutChanged}
               >
                 <Panel id="workbench-transcript" defaultSize="65" minSize={120}>
                   <Pane title="文稿区">{transcript}</Pane>
@@ -147,6 +184,8 @@ export function WorkbenchShell({
                 id="workbench-notes-stack"
                 orientation="vertical"
                 className="h-full w-full"
+                defaultLayout={notesStackLayout.defaultLayout}
+                onLayoutChanged={notesStackLayout.onLayoutChanged}
               >
                 <Panel id="workbench-notes" defaultSize="65" minSize={120}>
                   <Pane title="笔记区">{notes}</Pane>
