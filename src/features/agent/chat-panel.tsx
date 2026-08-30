@@ -14,6 +14,7 @@ export function ChatPanel() {
   const streaming = useStore(chatPrivateStore, (state) => state.streaming)
   const answer = useStore(chatPrivateStore, (state) => state.answer)
   const reasoning = useStore(chatPrivateStore, (state) => state.reasoning)
+  const error = useStore(chatPrivateStore, (state) => state.error)
 
   return (
     <div className="pointer-events-none absolute right-4 bottom-4 z-20 flex flex-col items-end gap-2">
@@ -31,6 +32,14 @@ export function ChatPanel() {
           {answer ? (
             <p className="mt-2 whitespace-pre-wrap text-foreground" data-slot="agent-answer">
               {answer}
+            </p>
+          ) : null}
+          {error ? (
+            <p
+              className="mt-2 text-sm text-destructive"
+              data-slot="agent-error"
+            >
+              {error}
             </p>
           ) : null}
           <form

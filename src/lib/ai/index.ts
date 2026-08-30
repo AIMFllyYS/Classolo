@@ -14,3 +14,9 @@ export {
   MISSING_AI_SECRET_MESSAGE,
   type CreateModelConfig,
 } from './create-model'
+export {
+  getAiRuntimeConfig,
+  resetAiRuntimeConfig,
+  setAiRuntimeConfig,
+  type AiRuntimeConfig,
+} from './runtime-config'

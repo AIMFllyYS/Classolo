@@ -1,3 +1,4 @@
+import { setAiRuntimeConfig } from '@/lib/ai'
 import { setUserSecretOverride } from '@/lib/providers/secrets'
 import { getSettingsPublic, publishCommand } from '@/lib/session'
 import { patchSettingsPublic } from '@/lib/session/writes/settings'
@@ -21,6 +22,7 @@ export async function saveAiSettings(
     apiKey: draft.apiKey.trim(),
   }
   patchAiPrivate(next)
+  setAiRuntimeConfig({ baseUrl: next.baseUrl, model: next.model })
   setUserSecretOverride('ai', next.apiKey || null)
   const result = await ping(next)
   const current = getSettingsPublic()
