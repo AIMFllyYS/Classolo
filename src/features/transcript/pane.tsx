@@ -1,31 +1,43 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { useStore } from 'zustand'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { useTranscriptPublic } from '@/lib/session'
 
 import {
-  pauseCapture,
-  resumeCapture,
-  startCapture,
-  stopCapture,
-} from './capture'
+  pauseSession,
+  resumeSession,
+  startSession,
+  stopSession,
+} from './pipeline'
 import { transcriptPrivateStore } from './private-store'
 
 export function TranscriptPane() {
   const status = useTranscriptPublic((state) => state.recordingStatus)
-  const count = useTranscriptPublic((state) => state.committed.length)
+  const committed = useTranscriptPublic((state) => state.committed)
   const error = useStore(transcriptPrivateStore, (state) => state.error)
   const level = useStore(transcriptPrivateStore, (state) => state.level)
+  const partial = useStore(transcriptPrivateStore, (state) => state.partial)
+  const highlightId = useStore(
+    transcriptPrivateStore,
+    (state) => state.highlightId,
+  )
+  const endRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ block: 'end' })
+  }, [committed.length, partial])
 
   return (
-    <div className="space-y-3 text-sm">
+    <div className="flex h-full min-h-0 flex-col gap-3 text-sm">
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           size="sm"
-          onClick={() => void startCapture()}
+          onClick={() => void startSession()}
           disabled={status === 'recording' || status === 'paused'}
         >
           开始
@@ -35,7 +47,7 @@ export function TranscriptPane() {
           size="sm"
           variant="secondary"
           onClick={() =>
-            void (status === 'paused' ? resumeCapture() : pauseCapture())
+            void (status === 'paused' ? resumeSession() : pauseSession())
           }
           disabled={status !== 'recording' && status !== 'paused'}
         >
@@ -45,7 +57,7 @@ export function TranscriptPane() {
           type="button"
           size="sm"
           variant="outline"
-          onClick={() => void stopCapture()}
+          onClick={() => void stopSession()}
           disabled={status !== 'recording' && status !== 'paused'}
         >
           结束
@@ -56,12 +68,31 @@ export function TranscriptPane() {
         <span className="mx-2">·</span>
         电平 {Math.round(level * 100)}%
       </p>
-      <p className="text-muted-foreground">已确认段：{count}</p>
       {error ? (
         <p className="text-destructive" data-slot="capture-error">
           {error}
         </p>
       ) : null}
+      <div className="min-h-0 flex-1 space-y-2 overflow-auto" data-slot="transcript-stream">
+        {committed.map((segment) => (
+          <p
+            key={segment.id}
+            data-segment-id={segment.id}
+            className={cn(
+              'rounded-md px-2 py-1 text-foreground',
+              highlightId === segment.id && 'bg-accent/20',
+            )}
+          >
+            {segment.text}
+          </p>
+        ))}
+        {partial ? (
+          <p className="px-2 py-1 text-muted-foreground italic" data-slot="transcript-partial">
+            {partial}
+          </p>
+        ) : null}
+        <div ref={endRef} />
+      </div>
     </div>
   )
 }
