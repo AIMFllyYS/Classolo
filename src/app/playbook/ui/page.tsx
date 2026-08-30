@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { playbookNav, uiPresets } from '@/features/playbook/registry'
 import { MindmapShowcase } from '@/features/playbook/mindmap-showcase'
 import { UiKitShowcase } from '@/features/playbook/ui-kit-showcase'
+import { WorkbenchShowcase } from '@/features/playbook/workbench-showcase'
 
 export default function PlaybookUiPage() {
   return (
@@ -35,6 +36,7 @@ export default function PlaybookUiPage() {
         ))}
       </ul>
       <UiKitShowcase />
+      <WorkbenchShowcase />
       <MindmapShowcase />
     </main>
   )
