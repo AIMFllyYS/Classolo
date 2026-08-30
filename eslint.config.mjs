@@ -43,6 +43,16 @@ const mindmapLibraryPatterns = [
     message:
       'import mindmap from src/components/mindmap (ADR-0005); do not import xyflow/dagre from business code',
   },
+  {
+    group: [
+      'streamdown',
+      'streamdown/**',
+      'react-markdown',
+      'react-markdown/**',
+    ],
+    message:
+      'import markdown from src/components/markdown (ADR-0011); do not import streamdown/react-markdown from business code',
+  },
 ]
 
 function writeBan(name, owner) {

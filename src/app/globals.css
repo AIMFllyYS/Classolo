@@ -9,3 +9,5 @@
 
 @import "../styles/tokens.css";
 @import "../styles/base.css";
+
+@source "../../node_modules/streamdown/dist/*.js";

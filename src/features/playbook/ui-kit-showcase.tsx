@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { classroomMarkdownKit } from '@/components/markdown'
 import {
   CardContent,
   CardDescription,
@@ -27,6 +28,7 @@ import {
 export function UiKitShowcase() {
   const { Button, Input, Select, Switch, Tabs, Card, Dialog, toast } =
     classroomUiKit
+  const { MarkdownStream } = classroomMarkdownKit
   const [hotwordsOn, setHotwordsOn] = useState(false)
   const [dialect, setDialect] = useState('stepfun')
 
@@ -112,7 +114,7 @@ export function UiKitShowcase() {
               设置页将复用同一套输入与选择。
             </TabsContent>
             <TabsContent value="note" className="pt-3 text-sm text-muted-foreground">
-              工作台卡片与对话框走同一封装层。
+              <MarkdownStream markdown={'**补充讲解** 走 Markdown 封装层，可流式追加。'} />
             </TabsContent>
           </Tabs>
         </CardContent>

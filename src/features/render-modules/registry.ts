@@ -1,5 +1,6 @@
 import { imageModule } from './image'
 import type { RenderModuleRegistry } from './manifest'
+import { richTextModule } from './rich-text'
 
 /**
  * P0 模块逐步注册（image / rich-text / ai-ask / gen-ui / agent-status）。
@@ -7,4 +8,5 @@ import type { RenderModuleRegistry } from './manifest'
  */
 export const renderModuleRegistry = {
   image: imageModule,
+  'rich-text': richTextModule,
 } as RenderModuleRegistry
