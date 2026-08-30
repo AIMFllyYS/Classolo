@@ -5,6 +5,7 @@
  *   local-engine/   sherpa-onnx（Electron 阶段接入）
  * 业务代码只 import 本文件与 types.ts。
  */
+import { getSelectedHotwordPackId, resolveHotwordPack } from './hotword-packs'
 import type { ASRConfig, ASRProvider } from './types'
 import { StepfunRealtimeWsProvider } from './realtime-ws/stepfun'
 
@@ -16,6 +17,25 @@ export type {
   ASRSegment,
 } from './types'
 export { MissingAsrSecretError, MISSING_ASR_SECRET_MESSAGE } from './missing-secret'
+export {
+  getSelectedHotwordPackId,
+  listHotwordPacks,
+  resetHotwordPackSelection,
+  resolveHotwordPack,
+  selectHotwordPack,
+  type HotwordPack,
+} from './hotword-packs'
+export { hotwordsForStart } from './hotwords'
+
+export function withHotwordPack(config: ASRConfig): ASRConfig {
+  if (config.hotwords && config.hotwords.length > 0) {
+    return config
+  }
+  return {
+    ...config,
+    hotwords: [...resolveHotwordPack(getSelectedHotwordPackId())],
+  }
+}
 
 export function createASRProvider(config: ASRConfig): ASRProvider {
   if (!config.family) {
@@ -27,7 +47,7 @@ export function createASRProvider(config: ASRConfig): ASRProvider {
   switch (config.family) {
     case 'realtime-ws':
       if (config.dialect === 'stepfun') {
-        return new StepfunRealtimeWsProvider(config)
+        return new StepfunRealtimeWsProvider(withHotwordPack(config))
       }
       throw new Error(`ASR dialect not implemented yet: ${config.dialect}`)
     default:

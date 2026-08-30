@@ -1,5 +1,6 @@
 import { resolveSecret } from '@/lib/providers/secrets'
 
+import { hotwordsForStart } from '../hotwords'
 import { MissingAsrSecretError } from '../missing-secret'
 import type { ASRCapabilities, ASRConfig, ASRProvider, ASRSegment } from '../types'
 
@@ -92,16 +93,23 @@ export class StepfunRealtimeWsProvider implements ASRProvider {
       }
     })
 
+    const hotwords = hotwordsForStart(
+      this.capabilities,
+      this.config.hotwords,
+    )
+    const session: Record<string, unknown> = {
+      model: this.config.model,
+      api_key: this.apiKey,
+      input_audio_format: 'pcm16',
+      sample_rate: this.config.sampleRate,
+    }
+    if (hotwords !== undefined) {
+      session.hotwords = hotwords
+    }
     socket.send(
       JSON.stringify({
         type: 'session.update',
-        session: {
-          model: this.config.model,
-          api_key: this.apiKey,
-          input_audio_format: 'pcm16',
-          sample_rate: this.config.sampleRate,
-          hotwords: this.config.hotwords ?? [],
-        },
+        session,
       }),
     )
     this.flushAudioQueue()
