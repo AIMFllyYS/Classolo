@@ -14,6 +14,10 @@ import {
   startCapture,
   stopCapture,
 } from './capture'
+import {
+  persistRecordingSession,
+  transcriptFlusher,
+} from './flush-runtime'
 import { patchTranscriptPrivate, resetTranscriptPrivate } from './private-store'
 
 let provider: ASRProvider | null = null
@@ -70,12 +74,18 @@ consumeCommands()
 export async function startSession(): Promise<void> {
   seq = 0
   const sessionId = crypto.randomUUID()
+  transcriptFlusher.attach(sessionId)
   patchTranscriptPublic({
     sessionId,
     recordingStatus: 'recording',
     latestCommittedId: null,
   })
   patchTranscriptPrivate({ error: null, partial: '', highlightId: null })
+  try {
+    await persistRecordingSession(sessionId)
+  } catch {
+    // persistence must never block recording
+  }
 
   const asr = createASRProvider(readAsrRuntimeConfig())
   asr.onPartial((segment) => {
@@ -91,6 +101,14 @@ export async function startSession(): Promise<void> {
       startMs: segment.startMs ?? 0,
       endMs: segment.endMs ?? 0,
     })
+    transcriptFlusher.enqueue({
+      id,
+      seq,
+      startMs: segment.startMs ?? 0,
+      endMs: segment.endMs ?? 0,
+      text: segment.text,
+    })
+    void transcriptFlusher.flush(false)
     patchTranscriptPrivate({ partial: '' })
   })
   asr.onError((error) => {
@@ -135,6 +153,7 @@ export async function startSession(): Promise<void> {
 
 export async function pauseSession(): Promise<void> {
   await pauseCapture()
+  void transcriptFlusher.flush(true)
 }
 
 export async function resumeSession(): Promise<void> {
@@ -145,4 +164,5 @@ export async function stopSession(): Promise<void> {
   await stopCapture()
   await provider?.stop()
   provider = null
+  void transcriptFlusher.flush(true)
 }
