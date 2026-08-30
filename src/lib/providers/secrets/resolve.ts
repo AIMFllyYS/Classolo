@@ -1,3 +1,4 @@
+import { getUserSecretOverride } from './override-store'
 import type { ResolvedSecret, SecretKind } from './types'
 
 const ENV_KEYS: Record<SecretKind, readonly string[]> = {
@@ -16,16 +17,20 @@ function readEnv(kind: SecretKind): string | null {
 }
 
 /**
- * 用户覆盖由设置页注入（Electron safeStorage / 内存 Map）。
- * P0 未接设置页前传 `undefined`，即退化为纯 env。
+ * Priority: explicit argument > stored user override (sessionStorage) > env > none.
+ * Electron safeStorage is a reserved backend swap; callers still use this function.
  */
 export function resolveSecret(
   kind: SecretKind,
   userOverride?: string | null,
 ): ResolvedSecret {
-  const user = userOverride?.trim() ?? ''
-  if (user !== '') {
-    return { kind, value: user, source: 'user' }
+  const explicit = userOverride?.trim() ?? ''
+  if (explicit !== '') {
+    return { kind, value: explicit, source: 'user' }
+  }
+  const stored = getUserSecretOverride(kind)
+  if (stored) {
+    return { kind, value: stored, source: 'user' }
   }
   const env = readEnv(kind)
   if (env) {

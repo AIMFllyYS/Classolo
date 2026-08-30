@@ -1,3 +1,5 @@
+import { clearAllUserSecretOverrides } from '@/lib/providers/secrets'
+
 import {
   createModel,
   MissingAISecretError,
@@ -7,6 +9,7 @@ import {
 const AI_ENV_KEYS = ['AI_API_KEY', 'NEXT_PUBLIC_AI_API_KEY'] as const
 
 function withoutAiEnv<T>(run: () => T): T {
+  clearAllUserSecretOverrides()
   const saved = AI_ENV_KEYS.map((key) => [key, process.env[key]] as const)
   for (const key of AI_ENV_KEYS) {
     delete process.env[key]

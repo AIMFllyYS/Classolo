@@ -1,3 +1,7 @@
+import {
+  clearAllUserSecretOverrides,
+  resolveSecret,
+} from '@/lib/providers/secrets'
 import { getSettingsPublic, subscribeCommands } from '@/lib/session'
 import { resetCommandBus } from '@/lib/session/commands'
 import { resetSettingsPublic } from '@/lib/session/writes/settings'
@@ -10,6 +14,7 @@ export async function readAiSavePublishesWithoutLeakingKey(): Promise<string> {
   resetCommandBus()
   resetSettingsPublic()
   resetAiPrivate()
+  clearAllUserSecretOverrides()
   const seen: string[] = []
   const stop = subscribeCommands((command) => {
     seen.push(command.type)
@@ -34,6 +39,10 @@ export async function readAiSavePublishesWithoutLeakingKey(): Promise<string> {
   }
   if (!seen.includes('ai.configChanged')) {
     throw new Error('save must publish ai.configChanged')
+  }
+  const resolved = resolveSecret('ai')
+  if (resolved.source !== 'user' || resolved.value !== secret) {
+    throw new Error('saved AI key must be the resolveSecret user override')
   }
   const privateConfig = getAiPrivateConfig()
   if (privateConfig.apiKey !== secret) {

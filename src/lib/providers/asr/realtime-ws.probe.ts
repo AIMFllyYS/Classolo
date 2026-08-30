@@ -1,3 +1,5 @@
+import { clearAllUserSecretOverrides } from '@/lib/providers/secrets'
+
 import { createASRProvider } from './index'
 import { MISSING_ASR_SECRET_MESSAGE } from './missing-secret'
 import { StepfunRealtimeWsProvider, type SocketLike } from './realtime-ws/stepfun'
@@ -39,6 +41,7 @@ class FakeSocket implements SocketLike {
 }
 
 export async function readMissingAsrSecretDiagnostic(): Promise<string> {
+  clearAllUserSecretOverrides()
   const saved = process.env.ASR_API_KEY
   const savedPublic = process.env.NEXT_PUBLIC_ASR_API_KEY
   delete process.env.ASR_API_KEY
