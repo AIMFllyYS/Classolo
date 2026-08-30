@@ -31,7 +31,7 @@ export const uiPresets: PlaybookPreset[] = [
   {
     id: 'workbench-shell',
     title: '工作台壳层',
-    status: 'planned',
+    status: 'ready',
     summary: '左侧导航 + 文稿/笔记分屏 + 双渲染区，经 src/components/layout',
   },
   {

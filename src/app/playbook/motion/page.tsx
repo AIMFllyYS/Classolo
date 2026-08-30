@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { MotionShowcase } from '@/features/playbook/motion-showcase'
 import { motionPresets, playbookNav } from '@/features/playbook/registry'
 
 export default function PlaybookMotionPage() {
@@ -33,9 +34,11 @@ export default function PlaybookMotionPage() {
           <li key={item.id} className="rounded-lg border border-border bg-card p-4">
             <p className="font-medium text-card-foreground">{item.title}</p>
             <p className="mt-1 text-sm text-muted-foreground">{item.summary}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{item.status}</p>
           </li>
         ))}
       </ul>
+      <MotionShowcase />
     </main>
   )
 }
