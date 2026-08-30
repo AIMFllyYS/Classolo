@@ -34,6 +34,12 @@ export const uiPresets: PlaybookPreset[] = [
     status: 'planned',
     summary: '左侧导航 + 文稿/笔记分屏 + 双渲染区，经 src/components/layout',
   },
+  {
+    id: 'classroom-mindmap',
+    title: '课堂思维导图',
+    status: 'ready',
+    summary: 'xyflow + dagre 树布局与课堂节点外观；封装层 src/components/mindmap',
+  },
 ]
 
 export const motionPresets: PlaybookPreset[] = [

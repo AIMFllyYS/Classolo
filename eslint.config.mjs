@@ -32,6 +32,19 @@ const featureIsolationPatterns = [
   },
 ]
 
+const mindmapLibraryPatterns = [
+  {
+    group: [
+      '@xyflow/react',
+      '@xyflow/react/**',
+      '@dagrejs/dagre',
+      '@dagrejs/dagre/**',
+    ],
+    message:
+      'import mindmap from src/components/mindmap (ADR-0005); do not import xyflow/dagre from business code',
+  },
+]
+
 function writeBan(name, owner) {
   return {
     paths: [
@@ -97,7 +110,7 @@ const allWrites = mergeBans(
     writeBan('settings', 'settings'),
     writeBan('render', 'agent'),
   ],
-  featureIsolationPatterns,
+  [...featureIsolationPatterns, ...mindmapLibraryPatterns],
 )
 
 const eslintConfig = [
@@ -125,7 +138,7 @@ const eslintConfig = [
             writeBan('settings', 'settings'),
             writeBan('render', 'agent'),
           ],
-          featureIsolationPatterns,
+          [...featureIsolationPatterns, ...mindmapLibraryPatterns],
         ),
       ],
     },
@@ -141,7 +154,7 @@ const eslintConfig = [
             writeBan('settings', 'settings'),
             writeBan('render', 'agent'),
           ],
-          featureIsolationPatterns,
+          [...featureIsolationPatterns, ...mindmapLibraryPatterns],
         ),
       ],
     },
@@ -157,7 +170,7 @@ const eslintConfig = [
             writeBan('notes', 'notes'),
             writeBan('render', 'agent'),
           ],
-          featureIsolationPatterns,
+          [...featureIsolationPatterns, ...mindmapLibraryPatterns],
         ),
       ],
     },
@@ -173,7 +186,7 @@ const eslintConfig = [
             writeBan('notes', 'notes'),
             writeBan('settings', 'settings'),
           ],
-          featureIsolationPatterns,
+          [...featureIsolationPatterns, ...mindmapLibraryPatterns],
         ),
       ],
     },
@@ -183,12 +196,15 @@ const eslintConfig = [
     rules: {
       'no-restricted-imports': [
         'error',
-        mergeBans([
-          writeBan('transcript', 'transcript'),
-          writeBan('notes', 'notes'),
-          writeBan('settings', 'settings'),
-          writeBan('render', 'agent'),
-        ]),
+        mergeBans(
+          [
+            writeBan('transcript', 'transcript'),
+            writeBan('notes', 'notes'),
+            writeBan('settings', 'settings'),
+            writeBan('render', 'agent'),
+          ],
+          mindmapLibraryPatterns,
+        ),
       ],
     },
   },
