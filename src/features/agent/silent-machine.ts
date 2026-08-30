@@ -4,6 +4,8 @@ import {
   subscribeTranscriptPublic,
 } from '@/lib/session'
 
+import { deliverSilentRender } from './silent-deliver'
+
 export const SILENT_AGENT_DEBOUNCE_MS = 6000
 export const SILENT_AGENT_MIN_SEGMENTS = 3
 
@@ -100,6 +102,9 @@ export function startSilentAgent(
         lastOutlineVersion: readOutlineVersion(),
       }
       options.onTick?.(getSilentAgentPrivateState())
+      if (!options.onTick) {
+        deliverSilentRender()
+      }
       privateState = { ...privateState, status: 'idle' }
     }, debounceMs)
   }
