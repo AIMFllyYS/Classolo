@@ -3,6 +3,10 @@ import { resolveSecret } from '@/lib/providers/secrets'
 import { getNotesPublic, getTranscriptPublic } from '@/lib/session'
 
 import { patchChatPrivate } from './chat-store'
+import {
+  searchTranscriptSnapshot,
+  searchTranscriptTool,
+} from './search-transcript'
 
 export type ChatDeltaStream = (
   prompt: string,
@@ -34,6 +38,7 @@ async function* defaultModelStream(
   const result = streamText({
     model: createModel(runtime),
     prompt,
+    tools: { search_transcript: searchTranscriptTool },
   })
   for await (const part of result.textStream) {
     yield { text: part }
@@ -51,7 +56,14 @@ export async function runChatTurn(
     .committed.slice(-6)
     .map((segment) => segment.text)
     .join('\n')
-  const packed = `课堂提纲：${outline || '（尚无）'}\n最近文稿：\n${recent}\n\n学生提问：${prompt}`
+  const hits = searchTranscriptSnapshot(prompt)
+  const evidence =
+    hits.length > 0
+      ? hits
+          .map((hit) => `[${hit.segmentId}] ${hit.text}`)
+          .join('\n')
+      : '（无命中，请调用 search_transcript 工具）'
+  const packed = `课堂提纲：${outline || '（尚无）'}\n最近文稿：\n${recent}\n检索命中：\n${evidence}\n\n学生提问：${prompt}`
   patchChatPrivate({
     streaming: true,
     answer: '',
