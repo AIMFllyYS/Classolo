@@ -6,6 +6,7 @@ export interface ChatPrivateState {
   streaming: boolean
   answer: string
   reasoning: string
+  error: string | null
 }
 
 export const initialChatPrivate: ChatPrivateState = {
@@ -14,6 +15,7 @@ export const initialChatPrivate: ChatPrivateState = {
   streaming: false,
   answer: '',
   reasoning: '',
+  error: null,
 }
 
 export const chatPrivateStore = createStore<ChatPrivateState>(

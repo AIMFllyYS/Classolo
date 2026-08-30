@@ -1,7 +1,10 @@
-import { createModel, streamText } from '@/lib/ai'
+import { MissingAISecretError, streamText } from '@/lib/ai'
 import { resolveSecret } from '@/lib/providers/secrets'
 import { getNotesPublic, getTranscriptPublic } from '@/lib/session'
 
+import { formatChatError, isRetryableChatError } from './chat-errors'
+import { getChatModel } from './chat-model'
+import { persistChatTerminal, type PersistChatTerminal } from './chat-persist'
 import { patchChatPrivate } from './chat-store'
 import {
   searchTranscriptSnapshot,
@@ -12,19 +15,14 @@ export type ChatDeltaStream = (
   prompt: string,
 ) => AsyncIterable<{ text?: string; reasoning?: string }>
 
-function readAiRuntime(): { baseUrl: string; model: string } {
-  const env =
-    typeof process === 'undefined' || !process.env ? undefined : process.env
-  return {
-    baseUrl:
-      env?.NEXT_PUBLIC_AI_BASE_URL?.trim() ||
-      env?.AI_BASE_URL?.trim() ||
-      'https://api.openai.com/v1',
-    model:
-      env?.NEXT_PUBLIC_AI_MODEL?.trim() ||
-      env?.AI_MODEL?.trim() ||
-      'z-ai/glm-5.3-flash',
-  }
+export const CHAT_RETRY_DELAYS_MS = [200, 800] as const
+
+export type ChatSleep = (ms: number) => Promise<void>
+
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 }
 
 async function* defaultModelStream(
@@ -32,11 +30,10 @@ async function* defaultModelStream(
 ): AsyncIterable<{ text?: string; reasoning?: string }> {
   const secret = resolveSecret('ai')
   if (secret.value === null) {
-    throw new Error('缺密钥：未配置 AI API key')
+    throw new MissingAISecretError()
   }
-  const runtime = readAiRuntime()
   const result = streamText({
-    model: createModel(runtime),
+    model: getChatModel(),
     prompt,
     tools: { search_transcript: searchTranscriptTool },
   })
@@ -45,10 +42,7 @@ async function* defaultModelStream(
   }
 }
 
-export async function runChatTurn(
-  prompt: string,
-  stream: ChatDeltaStream = defaultModelStream,
-): Promise<void> {
+function packPrompt(prompt: string): string {
   const outline = getNotesPublic()
     .outlineDigest.map((node) => node.title)
     .join('、')
@@ -59,30 +53,61 @@ export async function runChatTurn(
   const hits = searchTranscriptSnapshot(prompt)
   const evidence =
     hits.length > 0
-      ? hits
-          .map((hit) => `[${hit.segmentId}] ${hit.text}`)
-          .join('\n')
+      ? hits.map((hit) => `[${hit.segmentId}] ${hit.text}`).join('\n')
       : '（无命中，请调用 search_transcript 工具）'
-  const packed = `课堂提纲：${outline || '（尚无）'}\n最近文稿：\n${recent}\n检索命中：\n${evidence}\n\n学生提问：${prompt}`
+  return `课堂提纲：${outline || '（尚无）'}\n最近文稿：\n${recent}\n检索命中：\n${evidence}\n\n学生提问：${prompt}`
+}
+
+export async function runChatTurn(
+  prompt: string,
+  stream: ChatDeltaStream = defaultModelStream,
+  options: {
+    persist?: PersistChatTerminal
+    sleep?: ChatSleep
+  } = {},
+): Promise<void> {
+  const persist = options.persist ?? persistChatTerminal
+  const sleep = options.sleep ?? defaultSleep
+  const packed = packPrompt(prompt)
   patchChatPrivate({
     streaming: true,
     answer: '',
     reasoning: '正在思考…',
+    error: null,
   })
+  await persist({ role: 'user', content: prompt })
+  const attempts = CHAT_RETRY_DELAYS_MS.length + 1
   try {
-    let answer = ''
-    for await (const delta of stream(packed)) {
-      if (delta.reasoning) {
-        patchChatPrivate({ reasoning: delta.reasoning })
-      }
-      if (delta.text) {
-        answer += delta.text
-        patchChatPrivate({ answer })
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        let answer = ''
+        for await (const delta of stream(packed)) {
+          if (delta.reasoning) {
+            patchChatPrivate({ reasoning: delta.reasoning })
+          }
+          if (delta.text) {
+            answer += delta.text
+            patchChatPrivate({ answer, error: null })
+          }
+        }
+        await persist({ role: 'assistant', content: answer })
+        patchChatPrivate({ reasoning: '' })
+        return
+      } catch (error) {
+        const delay = CHAT_RETRY_DELAYS_MS[attempt]
+        if (isRetryableChatError(error) && delay !== undefined) {
+          patchChatPrivate({
+            reasoning: `${formatChatError(error)}，正在重试（${attempt + 2}/${attempts}）…`,
+          })
+          await sleep(delay)
+          continue
+        }
+        const message = formatChatError(error)
+        patchChatPrivate({ answer: '', reasoning: '', error: message })
+        await persist({ role: 'assistant', content: message })
+        return
       }
     }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : '对话失败'
-    patchChatPrivate({ answer: message, reasoning: '' })
   } finally {
     patchChatPrivate({ streaming: false })
   }

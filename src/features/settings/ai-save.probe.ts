@@ -1,3 +1,4 @@
+import { getAiRuntimeConfig, resetAiRuntimeConfig } from '@/lib/ai'
 import {
   clearAllUserSecretOverrides,
   resolveSecret,
@@ -14,6 +15,7 @@ export async function readAiSavePublishesWithoutLeakingKey(): Promise<string> {
   resetCommandBus()
   resetSettingsPublic()
   resetAiPrivate()
+  resetAiRuntimeConfig()
   clearAllUserSecretOverrides()
   const seen: string[] = []
   const stop = subscribeCommands((command) => {
@@ -47,6 +49,10 @@ export async function readAiSavePublishesWithoutLeakingKey(): Promise<string> {
   const privateConfig = getAiPrivateConfig()
   if (privateConfig.apiKey !== secret) {
     throw new Error('user override must stay in settings private memory')
+  }
+  const runtime = getAiRuntimeConfig()
+  if (runtime.model !== 'probe-model' || runtime.baseUrl !== 'https://example.invalid/v1') {
+    throw new Error('save must publish non-secret AI runtime for the next turn')
   }
   const failed = await saveAiSettings(
     {
