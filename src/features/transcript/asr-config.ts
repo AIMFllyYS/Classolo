@@ -1,4 +1,9 @@
-import type { ASRConfig, ASRFamily } from '@/lib/providers/asr'
+import {
+  getSelectedHotwordPackId,
+  resolveHotwordPack,
+  type ASRConfig,
+  type ASRFamily,
+} from '@/lib/providers/asr'
 
 function readEnv(name: string): string {
   if (typeof process === 'undefined' || !process.env) return ''
@@ -13,6 +18,7 @@ export function readAsrRuntimeConfig(): ASRConfig {
   const family = (readEnv('ASR_FAMILY') || 'realtime-ws') as ASRFamily
   const dialect = readEnv('ASR_DIALECT') || 'stepfun'
   const sampleRate = Number(readEnv('ASR_SAMPLE_RATE') || '16000')
+  const packId = readEnv('ASR_HOTWORD_PACK') || getSelectedHotwordPackId()
   return {
     family,
     dialect,
@@ -20,5 +26,6 @@ export function readAsrRuntimeConfig(): ASRConfig {
     apiKey: '',
     model: readEnv('ASR_MODEL') || 'stepaudio-2.5-asr-stream',
     sampleRate: Number.isFinite(sampleRate) ? sampleRate : 16000,
+    hotwords: [...resolveHotwordPack(packId)],
   }
 }
